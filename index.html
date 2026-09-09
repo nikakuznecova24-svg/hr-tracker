@@ -284,6 +284,8 @@
     s.refs.reject    = s.refs.reject    || DEF_REJECT.slice();
     s.refs.dismiss   = s.refs.dismiss   || DEF_DISMISS.slice();
     s.refs.templates = s.refs.templates || DEF_TEMPLATES.map(function(t){ return {name:t.name, text:t.text}; });
+    s.refs.docs = s.refs.docs || ["паспорт","снилс","инн","трудовая книжка","флюорография","справка от врача","фото 3x4"];
+    s.meta = s.meta || {};
     return s;
   }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ alert("не удалось сохранить — возможно, память браузера переполнена"); } }
@@ -355,6 +357,9 @@
   }
 
   function ratingName(r){ return r==="yes"?"подходит":r==="maybe"?"сомнения":r==="no"?"не подходит":""; }
+  function haptic(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms||12); }catch(e){} }
+  function normPhone(p){ return (p||"").replace(/[^\d]/g,"").replace(/^8/,"7"); }
+  function everReached(c, st){ if(c.status===st) return true; var hh=c.history||[]; for(var i=0;i<hh.length;i++) if(hh[i].to===st) return true; return false; }
 
   // ---- quick status change with history ----
   function condExtra(c, st){
@@ -376,7 +381,7 @@
       c.history.push({ date:isoToday(), to:ns, extra:condExtra(c, ns) });
       c.status = ns;
     }
-    save(); render();
+    haptic(); save(); render();
   }
 
   // ================= DAY =================
@@ -762,12 +767,18 @@
     var h = '<h2>отчёт</h2>';
     h += '<div class="mini" style="margin-bottom:10px"><button data-rmode="week" class="'+(mode==="week"?"":"")+'">за неделю</button><button data-rmode="month">за месяц</button></div>';
     h += '<textarea class="rep" id="repText" readonly>'+esc(txt)+'</textarea>';
-    h += '<button class="btn" id="repCopy">скопировать</button>';
+    h += '<button class="btn" id="repShare">отправить</button>';
+    h += '<button class="btn soft" id="repCopy" style="margin-top:8px">скопировать</button>';
     openSheet(h);
     each(sheet.querySelectorAll("[data-rmode]"), function(el){
       el.onclick = function(){ openReport(el.getAttribute("data-rmode")); };
     });
     document.getElementById("repCopy").onclick = function(){ copyText(txt); };
+    document.getElementById("repShare").onclick = function(){
+      haptic();
+      if(navigator.share){ navigator.share({ title:"отчёт по найму", text:txt }).catch(function(){}); }
+      else copyText(txt);
+    };
   }
   function copyText(txt){
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -969,6 +980,12 @@
            '<button class="inline-add" id="addVacInline">+ добавить вакансию</button></div>';
       h += '<div class="field"><label>возраст</label><input type="number" inputmode="numeric" data-k="age" value="'+esc(draft.age)+'" placeholder="лет"></div>';
       h += fld("телефон", '<input type="tel" data-k="phone" value="'+esc(draft.phone)+'" placeholder="+7">');
+      if(!isNew && normPhone(draft.phone))
+        h += '<div class="field"><div class="mini" id="contactRow">'+
+          '<button type="button" id="btnCall">позвонить</button>'+
+          '<button type="button" id="btnWa">написать в whatsapp</button>'+
+          '<button type="button" id="btnTg">в телеграм</button>'+
+          '</div></div>';
       h += '<div class="field"><label>опыт</label><div class="seg" id="expSeg">'+
            '<button type="button" data-exp="есть" class="'+(draft.exp==="есть"?"on":"")+'">есть</button>'+
            '<button type="button" data-exp="нет" class="'+(draft.exp==="нет"?"on":"")+'">нет</button></div></div>';
@@ -1065,6 +1082,21 @@
           each(sheet.querySelectorAll("#vacChips [data-vac]"), function(x){ x.classList.toggle("on", x===el); });
         };
       });
+      function msgForContact(){
+        readInputs();
+        var m = draft.meta||{};
+        var tpl = (state.refs.templates[0]||{}).text || "";
+        return tpl.replace(/\{имя\}/g,(draft.fio||"").split(" ")[0]||"")
+          .replace(/\{вакансия\}/g, vacTitle(draft.vacancy)||"")
+          .replace(/\{дата\}/g, ruDate(m.interviewDate||m.medDate)||"")
+          .replace(/\{время\}/g, m.interviewTime||"");
+      }
+      var bc = sheet.querySelector("#btnCall");
+      if(bc) bc.onclick = function(){ readInputs(); var p=normPhone(draft.phone); if(p){ haptic(); location.href = "tel:+"+p; } };
+      var bw = sheet.querySelector("#btnWa");
+      if(bw) bw.onclick = function(){ var p=normPhone(draft.phone); if(!p) return; haptic(); var msg=msgForContact(); window.open("https://wa.me/"+p+(msg?"?text="+encodeURIComponent(msg):""), "_blank"); };
+      var bt = sheet.querySelector("#btnTg");
+      if(bt) bt.onclick = function(){ var p=normPhone(draft.phone); if(!p) return; haptic(); window.open("https://t.me/+"+p, "_blank"); };
       var av = sheet.querySelector("#addVacInline");
       if(av) av.onclick = function(){
         readInputs();
@@ -1274,12 +1306,14 @@
   // ---- export / import ----
   function doExport(){
     try{
+      state.meta.lastBackup = isoToday(); save();
       var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.download = "найм-копия-"+isoToday()+".json";
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 8000);
+      toast("копия сохранена");
     }catch(e){ alert("не удалось выгрузить"); }
   }
   function doImport(e){
@@ -1309,6 +1343,11 @@
   document.getElementById("gearBtn").onclick = openSettings;
   document.getElementById("themeBtn").onclick = function(){ setTheme(effectiveTheme()==="dark" ? "light" : "dark"); };
   updateThemeBtn();
+
+  // лёгкая вибрация на нажатия
+  document.addEventListener("click", function(e){
+    if(e.target && e.target.closest && e.target.closest("button, .chip, .nav button, .fab, .row[data-cand], .ev[data-cand], .rowcol[data-cand], .disc")) haptic(8);
+  }, true);
 
   (function(){
     var d = new Date();
