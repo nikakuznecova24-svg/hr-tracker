@@ -333,6 +333,7 @@
   var TITLES = { day:"план на день", cands:"кандидаты", vacs:"вакансии", fired:"увольнения", stats:"сводка" };
   var candFilter = "all";
   var candSearch = "";
+  var ivView = "today";
 
   function setScreen(s){
     screen = s;
@@ -438,43 +439,47 @@
     }
     h += '</div>';
 
-    var interviews = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===t; })
-      .sort(function(a,b){ return (a.meta.interviewTime||"").localeCompare(b.meta.interviewTime||""); });
-    h += '<div class="card"><h2>сегодня на собеседовании</h2><div class="sub">'+ interviews.length +' чел.</div>';
-    if(!interviews.length) h += '<div class="empty">на сегодня никто не&nbsp;назначен</div>';
-    interviews.forEach(function(c){
-      h += '<div class="rowcol" data-cand="'+c.id+'"><div class="top-line"><div class="grow"><div class="name">'+esc(c.fio||"без имени")+'</div>'+
-           '<div class="meta">'+esc(vacTitle(c.vacancy)||"вакансия не&nbsp;указана")+'</div></div>'+
-           '<div class="pill">'+ (c.meta&&c.meta.interviewTime ? esc(c.meta.interviewTime) : "время?") +'</div><span class="chev">›</span></div>'+
-           '<div class="mini"><button data-act="passed" data-id="'+c.id+'">собес прошёл</button><button class="warn" data-act="noshow" data-id="'+c.id+'">не пришёл</button></div></div>';
-    });
-    h += '</div>';
-
-    // ---- собеседования на неделю ----
-    h += '<div class="card cal"><h2>собеседования на неделю</h2>';
-    var anyWeek = false;
-    for(var wd=0; wd<7; wd++){
-      var day = isoShift(wd);
-      var ints = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===day; })
+    // ---- собеседования: сегодня / на неделю (одна карточка) ----
+    h += '<div class="card cal"><div class="seg" id="ivToggle" style="margin-bottom:12px">'+
+      '<button type="button" data-iv="today" class="'+(ivView==="today"?"on":"")+'">сегодня</button>'+
+      '<button type="button" data-iv="week" class="'+(ivView==="week"?"on":"")+'">на неделю</button>'+
+      '</div>';
+    if(ivView==="today"){
+      var interviews = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===t; })
         .sort(function(a,b){ return (a.meta.interviewTime||"").localeCompare(b.meta.interviewTime||""); });
-      var meds = state.candidates.filter(function(c){ return c.status==="med" && c.meta && c.meta.medDate===day; });
-      if(!ints.length && !meds.length) continue;
-      anyWeek = true;
-      var tc = {};
-      ints.forEach(function(c){ var tm=c.meta.interviewTime; if(tm) tc[tm]=(tc[tm]||0)+1; });
-      var dObj = new Date(day);
-      var wn = ["вс","пн","вт","ср","чт","пт","сб"][dObj.getDay()];
-      h += '<div class="day"><div class="dh'+(wd===0?" wk":"")+'">'+wn+' '+ruShort(day)+(wd===0?' · сегодня':'')+'</div>';
-      ints.forEach(function(c){
-        var clash = c.meta.interviewTime && tc[c.meta.interviewTime]>1;
-        h += '<div class="ev'+(clash?" clash":"")+'" data-cand="'+c.id+'"><span class="tm">'+esc(c.meta.interviewTime||"—")+'</span><span class="grow">'+esc(c.fio||"без имени")+(clash?" · наложение":"")+'</span></div>';
+      h += '<h2>собеседования сегодня</h2><div class="sub">'+ interviews.length +' чел.</div>';
+      if(!interviews.length) h += '<div class="empty">на сегодня никто не&nbsp;назначен</div>';
+      interviews.forEach(function(c){
+        h += '<div class="rowcol" data-cand="'+c.id+'"><div class="top-line"><div class="grow"><div class="name">'+esc(c.fio||"без имени")+'</div>'+
+             '<div class="meta">'+esc(vacTitle(c.vacancy)||"вакансия не&nbsp;указана")+'</div></div>'+
+             '<div class="pill">'+ (c.meta&&c.meta.interviewTime ? esc(c.meta.interviewTime) : "время?") +'</div><span class="chev">›</span></div>'+
+             '<div class="mini"><button data-act="passed" data-id="'+c.id+'">собес прошёл</button><button class="warn" data-act="noshow" data-id="'+c.id+'">не пришёл</button></div></div>';
       });
-      meds.forEach(function(c){
-        h += '<div class="ev" data-cand="'+c.id+'"><span class="tm">мк</span><span class="grow">'+esc(c.fio||"без имени")+'</span></div>';
-      });
-      h += '</div>';
+    } else {
+      h += '<h2>собеседования на неделю</h2>';
+      var anyWeek = false;
+      for(var wd=0; wd<7; wd++){
+        var day = isoShift(wd);
+        var ints = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===day; })
+          .sort(function(a,b){ return (a.meta.interviewTime||"").localeCompare(b.meta.interviewTime||""); });
+        var meds = state.candidates.filter(function(c){ return c.status==="med" && c.meta && c.meta.medDate===day; });
+        if(!ints.length && !meds.length) continue;
+        anyWeek = true;
+        var tc = {};
+        ints.forEach(function(c){ var tm=c.meta.interviewTime; if(tm) tc[tm]=(tc[tm]||0)+1; });
+        var wn = ["вс","пн","вт","ср","чт","пт","сб"][new Date(day).getDay()];
+        h += '<div class="day"><div class="dh'+(wd===0?" wk":"")+'">'+wn+' '+ruShort(day)+(wd===0?' · сегодня':'')+'</div>';
+        ints.forEach(function(c){
+          var clash = c.meta.interviewTime && tc[c.meta.interviewTime]>1;
+          h += '<div class="ev'+(clash?" clash":"")+'" data-cand="'+c.id+'"><span class="tm">'+esc(c.meta.interviewTime||"—")+'</span><span class="grow">'+esc(c.fio||"без имени")+(clash?" · наложение":"")+'</span></div>';
+        });
+        meds.forEach(function(c){
+          h += '<div class="ev" data-cand="'+c.id+'"><span class="tm">мк</span><span class="grow">'+esc(c.fio||"без имени")+'</span></div>';
+        });
+        h += '</div>';
+      }
+      if(!anyWeek) h += '<div class="empty">на ближайшую неделю встреч нет</div>';
     }
-    if(!anyWeek) h += '<div class="empty">на ближайшую неделю встреч нет</div>';
     h += '</div>';
 
     var toCall = state.candidates.filter(function(c){
@@ -870,6 +875,9 @@
     each(document.querySelectorAll("#cf [data-f]"), function(el){
       el.onclick = function(){ candFilter = el.getAttribute("data-f"); render(); };
     });
+    each(document.querySelectorAll("#ivToggle [data-iv]"), function(el){
+      el.onclick = function(){ ivView = el.getAttribute("data-iv"); render(); };
+    });
     var cs = document.getElementById("candSearch");
     if(cs) cs.oninput = function(){ candSearch = cs.value; var pos = cs.selectionStart; render(); var n = document.getElementById("candSearch"); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} } };
     each(document.querySelectorAll("[data-rep]"), function(el){
@@ -900,10 +908,11 @@
     if(isNew) c = { id:uid(), fio:"", vacancy:"", age:"", phone:"", exp:"", status:"new", meta:{}, note:"", history:[], createdAt:isoToday() };
     var draft = JSON.parse(JSON.stringify(c));
 
-    function vacOptions(sel){
-      var o = '<option value="">— вакансия —</option>';
-      state.vacancies.forEach(function(v){ o += '<option value="'+v.id+'" '+(sel===v.id?"selected":"")+'>'+esc(v.title)+'</option>'; });
-      return o;
+    function vacChips(sel){
+      if(!state.vacancies.length) return '<div class="muted" style="font-size:12.5px">пока нет вакансий</div>';
+      return '<div class="chips" id="vacChips">'+ state.vacancies.map(function(v){
+        return '<button type="button" class="chip'+(sel===v.id?" on":"")+'" data-vac="'+v.id+'">'+esc(v.title||"без названия")+'</button>';
+      }).join("") +'</div>';
     }
     function opt(v,sel){ return '<option value="'+esc(v)+'" '+(sel===v?"selected":"")+'>'+esc(v)+'</option>'; }
     function fld(l,inner){ return '<div class="field"><label>'+l+'</label>'+inner+'</div>'; }
@@ -956,8 +965,8 @@
     function body(){
       var h = '<h2>'+(isNew?"новый кандидат":"карточка кандидата")+'</h2>';
       h += fld("фио", '<input data-k="fio" value="'+esc(draft.fio)+'" placeholder="имя и фамилия">');
-      h += fld("вакансия", '<select data-k="vacancy">'+vacOptions(draft.vacancy)+'</select>'+
-           '<button class="inline-add" id="addVacInline">+ добавить вакансию</button>');
+      h += '<div class="field"><label>вакансия</label>'+vacChips(draft.vacancy)+
+           '<button class="inline-add" id="addVacInline">+ добавить вакансию</button></div>';
       h += '<div class="field"><label>возраст</label><input type="number" inputmode="numeric" data-k="age" value="'+esc(draft.age)+'" placeholder="лет"></div>';
       h += fld("телефон", '<input type="tel" data-k="phone" value="'+esc(draft.phone)+'" placeholder="+7">');
       h += '<div class="field"><label>опыт</label><div class="seg" id="expSeg">'+
@@ -1048,6 +1057,12 @@
         el.onclick = function(){
           draft.exp = el.getAttribute("data-exp");
           each(sheet.querySelectorAll("#expSeg [data-exp]"), function(x){ x.classList.toggle("on", x===el); });
+        };
+      });
+      each(sheet.querySelectorAll("#vacChips [data-vac]"), function(el){
+        el.onclick = function(){
+          draft.vacancy = el.getAttribute("data-vac");
+          each(sheet.querySelectorAll("#vacChips [data-vac]"), function(x){ x.classList.toggle("on", x===el); });
         };
       });
       var av = sheet.querySelector("#addVacInline");
