@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>найм · трекер</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf8fc;
+    --card:#ffffff;
+    --ink:#2c2740;
+    --ink-soft:#8b84a0;
+    --line:#ece8f4;
+    --accent:#6b5fa8;
+    --accent-soft:#efecf9;
+    --ok:#3f9d7a;
+    --warn:#c98a3c;
+    --bad:#c15c6b;
+    --shadow:0 10px 34px rgba(58,48,92,.10), 0 2px 8px rgba(58,48,92,.06);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    background-image:
+      radial-gradient(52vw 52vw at 8% 0%, rgba(184,166,232,.38), transparent 62%),
+      radial-gradient(46vw 46vw at 98% 8%, rgba(245,198,214,.34), transparent 60%),
+      radial-gradient(60vw 60vw at 50% 100%, rgba(168,197,232,.30), transparent 60%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    font-size:15px;
+    line-height:1.4;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  }
+  h1,h2,h3{font-family:"Fraunces",Georgia,"Times New Roman",serif;font-weight:500;margin:0;letter-spacing:0}
+  button{font-family:inherit;font-size:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:16px}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+  /* header */
+  .top{padding:calc(16px + env(safe-area-inset-top)) 0 6px}
+  .top .date{color:var(--ink-soft);font-size:13px}
+  .top h1{font-size:27px;margin-top:2px}
+  .top .gear{position:absolute;right:16px;top:calc(18px + env(safe-area-inset-top));width:38px;height:38px;border:none;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
+  .top-in{position:relative}
+
+  /* cards */
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px;margin:12px 0}
+  .card > h2{font-size:17px;margin-bottom:2px}
+  .card .sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:10px}
+  .muted{color:var(--ink-soft)}
+  .empty{color:var(--ink-soft);font-size:13.5px;padding:8px 2px}
+
+  /* rows */
+  .row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none}
+  .row .grow{flex:1;min-width:0}
+  .row .name{font-weight:500}
+  .row .meta{color:var(--ink-soft);font-size:12.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chev{color:var(--ink-soft);flex:none}
+
+  /* pills */
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:4px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .pill.s-new{background:#eef0f6;color:#6a7390}
+  .pill.s-nocall{background:#f3ece6;color:#a9764a}
+  .pill.s-interview{background:#e9ecfb;color:#5a63c6}
+  .pill.s-noshow{background:#f6e9ec;color:#b26576}
+  .pill.s-think{background:#fbf3e6;color:#b1832f}
+  .pill.s-med{background:#e6f2ec;color:#3f8f6f}
+  .pill.s-refuse-self,.pill.s-refuse-us{background:#f6eaec;color:#b0566a}
+  .pill.s-hired{background:#e5f3ea;color:#2f8d5f}
+
+  /* task check */
+  .chk{width:22px;height:22px;border-radius:7px;border:1.6px solid #cfc8e0;flex:none;display:flex;align-items:center;justify-content:center;background:transparent}
+  .chk.on{background:var(--accent);border-color:var(--accent)}
+  .chk.on svg{display:block}
+  .chk svg{display:none;color:#fff}
+  .task.done .grow{color:var(--ink-soft);text-decoration:line-through}
+
+  /* fab */
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 12px 30px rgba(107,95,168,.45);font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:40}
+
+  /* bottom nav */
+  .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:30}
+  .nav button{flex:1;background:none;border:none;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;font-size:10.5px}
+  .nav button.on{color:var(--accent)}
+  .nav svg{width:22px;height:22px}
+
+  /* numbers grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:13px 14px}
+  .stat .n{font-family:"Fraunces",Georgia,serif;font-size:26px;font-weight:600;line-height:1}
+  .stat .l{color:var(--ink-soft);font-size:12px;margin-top:5px}
+  .stat.big{grid-column:1 / -1}
+
+  /* funnel */
+  .fn{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+  .fn .step{display:flex;align-items:center;gap:10px}
+  .fn .bar{height:26px;border-radius:8px;background:var(--accent-soft);flex:none;min-width:26px;display:flex;align-items:center;justify-content:flex-end;padding:0 8px;font-size:12px;color:var(--accent);font-weight:500}
+  .fn .lab{color:var(--ink-soft);font-size:12.5px}
+
+  /* sheet / modal */
+  .scrim{position:fixed;inset:0;background:rgba(38,32,58,.42);z-index:50;opacity:0;pointer-events:none;transition:opacity .18s}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--bg);background-image:radial-gradient(60vw 40vw at 100% 0%, rgba(245,198,214,.30), transparent 60%);border-radius:26px 26px 0 0;z-index:51;transform:translateY(100%);transition:transform .22s ease;padding:8px 16px calc(28px + env(safe-area-inset-bottom))}
+  .sheet.on{transform:translateY(0)}
+  .sheet .handle{width:38px;height:4px;border-radius:2px;background:#d7d0e6;margin:8px auto 6px}
+  .sheet h2{font-size:20px;margin:6px 2px 12px}
+  .field{margin:12px 0}
+  .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--ink);outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field textarea{min-height:74px;resize:vertical}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1;padding:11px 8px;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--ink-soft)}
+  .seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+  .cond{background:var(--accent-soft);border-radius:15px;padding:4px 12px 12px;margin:12px 0}
+  .btn{width:100%;padding:14px;border:none;border-radius:15px;background:var(--accent);color:#fff;font-weight:500;margin-top:16px}
+  .btn.ghost{background:transparent;color:var(--bad);box-shadow:none;margin-top:8px}
+  .btn.soft{background:var(--card);color:var(--ink);box-shadow:var(--shadow);border:1px solid var(--line)}
+  .hist{margin-top:6px}
+  .hist .h{display:flex;gap:8px;font-size:12.5px;color:var(--ink-soft);padding:5px 0;border-top:1px solid var(--line)}
+  .hist .h:first-child{border-top:none}
+  .hist .h b{color:var(--ink);font-weight:500}
+  .inline-add{color:var(--accent);font-size:12.5px;background:none;border:none;padding:6px 0}
+  .disc{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+  .disc:first-child{border-top:none}
+  details.vac{border-top:1px solid var(--line);padding:8px 0}
+  details.vac:first-of-type{border-top:none}
+  details.vac summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer}
+  details.vac summary::-webkit-details-marker{display:none}
+  .tag{font-size:11px;color:var(--ink-soft);background:#f1eef8;border-radius:999px;padding:3px 8px}
+  .brk{color:var(--ink-soft);font-size:12.5px;padding:8px 0 2px 32px;line-height:1.7}
+  .filters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch}
+  .filters button{flex:none;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:12.5px}
+  .filters button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .addrow{display:flex;gap:8px}
+  .addrow input{flex:1}
+  .addrow button{flex:none;padding:0 16px;border:none;border-radius:13px;background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top top-in">
+    <div class="date" id="today"></div>
+    <h1 id="screenTitle">план на день</h1>
+    <button class="gear" id="gearBtn" aria-label="настройки">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b5fa8" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.63.77 1.06 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div id="view"></div>
+</div>
+
+<button class="fab" id="fab">+</button>
+
+<nav class="nav" id="nav">
+  <button data-s="day" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12l2-2 4 4 8-8 4 4"/><path d="M3 20h18"/></svg>день</button>
+  <button data-s="cands"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.6-3.3 3-5 5.5-5s4.9 1.7 5.5 5"/><path d="M17 8.5a3 3 0 0 1 0 5.5"/><path d="M18.5 20c-.2-2-1-3.4-2.2-4.3"/></svg>кандидаты</button>
+  <button data-s="vacs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7"/></svg>вакансии</button>
+  <button data-s="fired"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3"/></svg>увольнения</button>
+  <button data-s="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5"/><rect x="7" y="11" width="3.4" height="8" rx="1"/><rect x="13" y="7" width="3.4" height="12" rx="1"/><rect x="19" y="14" width="1.6" height="5" rx="0.8"/></svg>сводка</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "hrtrk_v1";
+
+  var STATUSES = [
+    ["new","новый","s-new"],
+    ["nocall","не дозвонились","s-nocall"],
+    ["interview","на собеседовании","s-interview"],
+    ["noshow","не пришёл на собес","s-noshow"],
+    ["think","думает","s-think"],
+    ["med","на медкомиссии","s-med"],
+    ["refuse-self","отказал сам","s-refuse-self"],
+    ["refuse-us","отказали мы","s-refuse-us"],
+    ["hired","вышел на работу","s-hired"]
+  ];
+  function stName(k){ for(var i=0;i<STATUSES.length;i++) if(STATUSES[i][0]===k) return STATUSES[i][1]; return k; }
+  function stCls(k){ for(var i=0;i<STATUSES.length;i++) if(STATUSES[i][0]===k) return STATUSES[i][2]; return "s-new"; }
+  var DEAD = {"refuse-self":1,"refuse-us":1,"hired":1};
+
+  var DEF_REJECT = ["не устроила зарплата","далеко ездить","нашёл другую работу","не прошёл медкомиссию","не вышел на связь","не пришёл на собеседование","не устроил график"];
+  var DEF_DISMISS = ["по собственному желанию","не прошёл испытательный срок","нарушения дисциплины","переезд","не устроила зарплата","конфликт в коллективе","по здоровью"];
+
+  var state = load();
+
+  function load(){
+    var s;
+    try{ s = JSON.parse(localStorage.getItem(KEY)); }catch(e){ s = null; }
+    if(!s || typeof s!=="object") s = {};
+    s.candidates = s.candidates || [];
+    s.vacancies  = s.vacancies  || [];
+    s.dismissals = s.dismissals || [];
+    s.tasks      = s.tasks      || [];
+    s.refs       = s.refs       || {};
+    s.refs.reject  = s.refs.reject  || DEF_REJECT.slice();
+    s.refs.dismiss = s.refs.dismiss || DEF_DISMISS.slice();
+    return s;
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ alert("не удалось сохранить — возможно, память браузера переполнена"); } }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // ---- dates ----
+  function pad(n){ return n<10 ? "0"+n : ""+n; }
+  function isoToday(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function ruDate(iso){
+    if(!iso) return "";
+    var p = iso.split("-"); if(p.length<3) return iso;
+    return p[2]+"."+p[1]+"."+p[0];
+  }
+  function ruShort(iso){ if(!iso) return ""; var p=iso.split("-"); return p[2]+"."+p[1]; }
+  function monthKey(iso){ if(!iso) return ""; var p=iso.split("-"); return p[0]+"-"+p[1]; }
+  var MONTHS = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+  function monthName(iso){ if(!iso) return ""; var p=iso.split("-"); return MONTHS[(parseInt(p[1],10)||1)-1]+" "+p[0]; }
+  function weekAhead(iso){
+    var t = isoToday();
+    if(!iso) return false;
+    var a = new Date(t), b = new Date(iso);
+    var diff = (b - a) / 86400000;
+    return diff >= 0 && diff <= 6;
+  }
+  function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  // ---- current screen ----
+  var screen = "day";
+  var TITLES = { day:"план на день", cands:"кандидаты", vacs:"вакансии", fired:"увольнения", stats:"сводка" };
+  var candFilter = "all";
+
+  function setScreen(s){
+    screen = s;
+    document.getElementById("screenTitle").textContent = TITLES[s];
+    var b = document.querySelectorAll("#nav button");
+    for(var i=0;i<b.length;i++) b[i].classList.toggle("on", b[i].getAttribute("data-s")===s);
+    document.getElementById("fab").style.display = (s==="stats") ? "none" : "flex";
+    render();
+    window.scrollTo(0,0);
+  }
+
+  function render(){
+    var v = document.getElementById("view");
+    if(screen==="day") v.innerHTML = viewDay();
+    else if(screen==="cands") v.innerHTML = viewCands();
+    else if(screen==="vacs") v.innerHTML = viewVacs();
+    else if(screen==="fired") v.innerHTML = viewFired();
+    else if(screen==="stats") v.innerHTML = viewStats();
+    bindView();
+  }
+
+  // ================= DAY =================
+  function viewDay(){
+    var t = isoToday();
+    var todayTasks = state.tasks.filter(function(x){ return !x.done && (!x.date || x.date<=t); });
+    var doneToday  = state.tasks.filter(function(x){ return x.done; });
+    var interviews = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===t; })
+      .sort(function(a,b){ return (a.meta.interviewTime||"").localeCompare(b.meta.interviewTime||""); });
+    var toCall = state.candidates.filter(function(c){
+      if(c.status==="nocall") return true;
+      if(c.status==="think" && c.meta && c.meta.callbackDate && c.meta.callbackDate<=t) return true;
+      return false;
+    });
+
+    var h = "";
+    h += '<div class="card"><h2>задачи на сегодня</h2><div class="sub">'+ todayTasks.length +' активных · '+ doneToday.length +' сделано</div>';
+    h += '<div class="addrow"><input id="taskInput" placeholder="новая задача" maxlength="140"><button id="taskAdd">+</button></div>';
+    if(!todayTasks.length && !doneToday.length) h += '<div class="empty">пока пусто</div>';
+    todayTasks.forEach(function(x){ h += taskRow(x); });
+    doneToday.forEach(function(x){ h += taskRow(x); });
+    h += '</div>';
+
+    h += '<div class="card"><h2>сегодня на собеседовании</h2><div class="sub">'+ interviews.length +' чел.</div>';
+    if(!interviews.length) h += '<div class="empty">на сегодня никто не&nbsp;назначен</div>';
+    interviews.forEach(function(c){
+      h += '<div class="row" data-cand="'+c.id+'"><div class="grow"><div class="name">'+esc(c.fio||"без имени")+'</div>'+
+           '<div class="meta">'+esc(vacTitle(c.vacancy)||"вакансия не&nbsp;указана")+'</div></div>'+
+           '<div class="pill">'+ (c.meta&&c.meta.interviewTime ? esc(c.meta.interviewTime) : "время не&nbsp;указано") +'</div>'+
+           '<span class="chev">›</span></div>';
+    });
+    h += '</div>';
+
+    h += '<div class="card"><h2>обзвонить</h2><div class="sub">не дозвонились или пора&nbsp;перезвонить</div>';
+    if(!toCall.length) h += '<div class="empty">никого</div>';
+    toCall.forEach(function(c){
+      h += '<div class="row" data-cand="'+c.id+'"><div class="grow"><div class="name">'+esc(c.fio||"без имени")+'</div>'+
+           '<div class="meta">'+esc(c.phone||"телефон не&nbsp;указан")+' · '+esc(vacTitle(c.vacancy)||"—")+'</div></div>'+
+           '<span class="pill '+stCls(c.status)+'">'+stName(c.status)+'</span><span class="chev">›</span></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+  function taskRow(x){
+    return '<div class="row task '+(x.done?"done":"")+'" data-task="'+x.id+'">'+
+      '<button class="chk '+(x.done?"on":"")+'" data-toggle="'+x.id+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></button>'+
+      '<div class="grow">'+esc(x.text)+ (x.date && x.date<isoToday() && !x.done ? ' <span class="muted">· просрочено</span>':'') +'</div>'+
+      '<button class="chev" data-deltask="'+x.id+'" style="background:none;border:none;font-size:18px">×</button></div>';
+  }
+
+  // ================= CANDIDATES =================
+  function viewCands(){
+    var h = '<div class="filters" id="cf">';
+    h += fbtn("all","все", state.candidates.length);
+    STATUSES.forEach(function(s){
+      var n = state.candidates.filter(function(c){return c.status===s[0];}).length;
+      if(n) h += fbtn(s[0], s[1], n);
+    });
+    h += '</div>';
+
+    var list = state.candidates.slice().sort(function(a,b){ return (b.createdAt||"").localeCompare(a.createdAt||""); });
+    if(candFilter!=="all") list = list.filter(function(c){ return c.status===candFilter; });
+
+    h += '<div class="card">';
+    if(!list.length) h += '<div class="empty">нет кандидатов — нажми&nbsp;«+», чтобы добавить</div>';
+    list.forEach(function(c){
+      var extra = candExtra(c);
+      h += '<div class="row" data-cand="'+c.id+'"><div class="grow"><div class="name">'+esc(c.fio||"без имени")+'</div>'+
+           '<div class="meta">'+esc(vacTitle(c.vacancy)||"вакансия не&nbsp;указана")+ (extra? ' · '+esc(extra):'') +'</div></div>'+
+           '<span class="pill '+stCls(c.status)+'">'+stName(c.status)+'</span><span class="chev">›</span></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+  function fbtn(k,label,n){ return '<button data-f="'+k+'" class="'+(candFilter===k?"on":"")+'">'+label+' '+n+'</button>'; }
+  function candExtra(c){
+    var m = c.meta||{};
+    if(c.status==="interview") return (m.interviewDate?ruShort(m.interviewDate):"") + (m.interviewTime?" "+m.interviewTime:"");
+    if(c.status==="med") return m.medDate?("мк "+ruShort(m.medDate)):"";
+    if(c.status==="think") return m.thinkUntil?("до "+ruShort(m.thinkUntil)):"";
+    if(c.status==="nocall") return m.callbackDate?("перезвон "+ruShort(m.callbackDate)):"";
+    if(c.status==="hired") return m.startDate?("с "+ruShort(m.startDate)):"";
+    if(c.status==="refuse-self"||c.status==="refuse-us") return m.reason||"";
+    return "";
+  }
+
+  // ================= VACANCIES =================
+  function vacTitle(id){ var v = findVac(id); return v?v.title:""; }
+  function findVac(id){ for(var i=0;i<state.vacancies.length;i++) if(state.vacancies[i].id===id) return state.vacancies[i]; return null; }
+
+  function viewVacs(){
+    var h = '<div class="card"><h2>вакансии</h2><div class="sub">сколько нужно людей и кто&nbsp;в&nbsp;работе</div>';
+    if(!state.vacancies.length) h += '<div class="empty">нет вакансий — нажми&nbsp;«+»</div>';
+    state.vacancies.forEach(function(v){
+      var mine = state.candidates.filter(function(c){ return c.vacancy===v.id; });
+      var active = mine.filter(function(c){ return !DEAD[c.status]; }).length;
+      var hired = mine.filter(function(c){ return c.status==="hired"; }).length;
+      var need = Math.max(0,(v.need||0));
+      var by = {};
+      mine.forEach(function(c){ by[c.status]=(by[c.status]||0)+1; });
+      h += '<details class="vac"><summary><div class="grow"><div class="name">'+esc(v.title||"без названия")+'</div>'+
+           '<div class="meta">нужно '+need+' · вышло '+hired+' · в работе '+active+'</div></div>'+
+           '<span class="tag">'+ (need-hired>0 ? "ещё "+(need-hired) : "закрыта") +'</span><span class="chev">›</span></summary>';
+      var order = ["nocall","interview","noshow","think","med","refuse-self","refuse-us","hired","new"];
+      var parts = [];
+      order.forEach(function(k){ if(by[k]) parts.push(stName(k)+" — "+by[k]); });
+      h += '<div class="brk">'+ (parts.length? parts.join("<br>") : "кандидатов пока нет") +
+           '<br><button class="inline-add" data-editvac="'+v.id+'">изменить вакансию</button></div></details>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  // ================= DISMISSALS =================
+  function viewFired(){
+    var mk = monthKey(isoToday());
+    var thisMonth = state.dismissals.filter(function(d){ return monthKey(d.date)===mk; });
+    var reasons = {};
+    state.dismissals.forEach(function(d){ if(d.reason) reasons[d.reason]=(reasons[d.reason]||0)+1; });
+    var topR = Object.keys(reasons).sort(function(a,b){return reasons[b]-reasons[a];}).slice(0,3);
+
+    var h = '<div class="card"><h2>за этот месяц</h2><div class="sub">'+monthName(isoToday())+'</div>';
+    h += '<div class="row"><div class="grow name">уволено</div><div class="pill">'+thisMonth.length+'</div></div>';
+    if(topR.length){
+      h += '<div class="sub" style="margin-top:10px">частые причины за всё время</div>';
+      topR.forEach(function(r){ h += '<div class="disc"><span>'+esc(r)+'</span><span class="muted">'+reasons[r]+'</span></div>'; });
+    }
+    h += '</div>';
+
+    var list = state.dismissals.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+    h += '<div class="card"><h2>список</h2>';
+    if(!list.length) h += '<div class="empty">пока никого — нажми&nbsp;«+»</div>';
+    list.forEach(function(d){
+      h += '<div class="row" data-fired="'+d.id+'"><div class="grow"><div class="name">'+esc(d.fio||"без имени")+'</div>'+
+           '<div class="meta">'+esc(d.position||"должность не&nbsp;указана")+' · '+esc(d.reason||"причина не&nbsp;указана")+'</div></div>'+
+           '<div class="meta">'+ruShort(d.date)+'</div><span class="chev">›</span></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  // ================= STATS =================
+  function viewStats(){
+    var t = isoToday(), mk = monthKey(t);
+    var C = state.candidates;
+    var openVac = state.vacancies.filter(function(v){
+      var hired = C.filter(function(c){return c.vacancy===v.id && c.status==="hired";}).length;
+      return (v.need||0) - hired > 0;
+    });
+    var needMore = openVac.reduce(function(a,v){
+      var hired = C.filter(function(c){return c.vacancy===v.id && c.status==="hired";}).length;
+      return a + Math.max(0,(v.need||0)-hired);
+    },0);
+    var intToday = C.filter(function(c){return c.status==="interview" && c.meta && c.meta.interviewDate===t;}).length;
+    var intWeek  = C.filter(function(c){return c.status==="interview" && c.meta && weekAhead(c.meta.interviewDate);}).length;
+    var med = C.filter(function(c){return c.status==="med";}).length;
+    var think = C.filter(function(c){return c.status==="think";}).length;
+    var nocall = C.filter(function(c){return c.status==="nocall";}).length;
+    var hiredMonth = C.filter(function(c){return c.status==="hired" && c.meta && monthKey(c.meta.startDate)===mk;}).length;
+    var firedMonth = state.dismissals.filter(function(d){return monthKey(d.date)===mk;}).length;
+
+    var h = '<div class="grid">';
+    h += stat(openVac.length, "открытых вакансий");
+    h += stat(needMore, "ещё нужно людей");
+    h += stat(intToday, "собесов сегодня");
+    h += stat(intWeek, "собесов на неделе");
+    h += stat(med, "на медкомиссии");
+    h += stat(think, "думают");
+    h += stat(nocall, "не дозвонились");
+    h += stat(hiredMonth, "вышло за месяц");
+    h += stat(firedMonth, "уволено за месяц");
+    h += '</div>';
+
+    var steps = [
+      ["new","новый"],["nocall","не дозвонились"],["interview","на собеседовании"],
+      ["med","на медкомиссии"],["hired","вышли на работу"]
+    ];
+    var counts = steps.map(function(s){ return C.filter(function(c){return c.status===s[0];}).length; });
+    var mx = Math.max.apply(null, counts.concat([1]));
+    h += '<div class="card"><h2>воронка сейчас</h2><div class="fn">';
+    steps.forEach(function(s,i){
+      var w = 26 + Math.round((counts[i]/mx) * 220);
+      h += '<div class="step"><div class="bar" style="width:'+w+'px">'+counts[i]+'</div><div class="lab">'+s[1]+'</div></div>';
+    });
+    h += '</div></div>';
+
+    h += '<div class="card"><h2>данные</h2><div class="sub">хранятся в этом браузере — делай копию</div>'+
+         '<button class="btn soft" id="exp">выгрузить копию (файл)</button>'+
+         '<button class="btn soft" id="imp" style="margin-top:8px">загрузить из копии</button>'+
+         '<input type="file" id="impFile" accept="application/json,.json" style="display:none">'+
+         '</div>';
+    return h;
+  }
+  function stat(n,l){ return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>'; }
+
+  // ================= BIND =================
+  function bindView(){
+    // open candidate
+    each(document.querySelectorAll("[data-cand]"), function(el){
+      el.onclick = function(e){ if(e.target.closest("[data-deltask],[data-toggle]")) return; openCand(el.getAttribute("data-cand")); };
+    });
+    each(document.querySelectorAll("[data-fired]"), function(el){
+      el.onclick = function(){ openFired(el.getAttribute("data-fired")); };
+    });
+    each(document.querySelectorAll("[data-editvac]"), function(el){
+      el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openVac(el.getAttribute("data-editvac")); };
+    });
+    // tasks
+    var ti = document.getElementById("taskInput"), ta = document.getElementById("taskAdd");
+    if(ta) ta.onclick = function(){
+      var v = (ti.value||"").trim(); if(!v) return;
+      state.tasks.unshift({ id:uid(), text:v, done:false, date:isoToday() });
+      ti.value=""; save(); render();
+    };
+    if(ti) ti.onkeydown = function(e){ if(e.key==="Enter"){ e.preventDefault(); ta.click(); } };
+    each(document.querySelectorAll("[data-toggle]"), function(el){
+      el.onclick = function(){ var x = findTask(el.getAttribute("data-toggle")); if(x){ x.done=!x.done; save(); render(); } };
+    });
+    each(document.querySelectorAll("[data-deltask]"), function(el){
+      el.onclick = function(){ state.tasks = state.tasks.filter(function(t){ return t.id!==el.getAttribute("data-deltask"); }); save(); render(); };
+    });
+    // filters
+    each(document.querySelectorAll("#cf [data-f]"), function(el){
+      el.onclick = function(){ candFilter = el.getAttribute("data-f"); render(); };
+    });
+    // export / import
+    var exp = document.getElementById("exp");
+    if(exp) exp.onclick = doExport;
+    var imp = document.getElementById("imp"), impF = document.getElementById("impFile");
+    if(imp) imp.onclick = function(){ impF.click(); };
+    if(impF) impF.onchange = doImport;
+  }
+  function findTask(id){ for(var i=0;i<state.tasks.length;i++) if(state.tasks[i].id===id) return state.tasks[i]; return null; }
+  function findCand(id){ for(var i=0;i<state.candidates.length;i++) if(state.candidates[i].id===id) return state.candidates[i]; return null; }
+  function findFired(id){ for(var i=0;i<state.dismissals.length;i++) if(state.dismissals[i].id===id) return state.dismissals[i]; return null; }
+  function each(nl,fn){ for(var i=0;i<nl.length;i++) fn(nl[i]); }
+
+  // ================= SHEET =================
+  var scrim = document.getElementById("scrim"), sheet = document.getElementById("sheet");
+  function openSheet(html){ sheet.innerHTML = '<div class="handle"></div>'+html; scrim.classList.add("on"); sheet.classList.add("on"); }
+  function closeSheet(){ scrim.classList.remove("on"); sheet.classList.remove("on"); }
+  scrim.onclick = closeSheet;
+
+  // ---- candidate editor ----
+  function openCand(id){
+    var c = id ? findCand(id) : null;
+    var isNew = !c;
+    if(isNew) c = { id:uid(), fio:"", vacancy:"", age:"", phone:"", exp:"", status:"new", meta:{}, note:"", history:[], createdAt:isoToday() };
+    var draft = JSON.parse(JSON.stringify(c));
+
+    function vacOptions(sel){
+      var o = '<option value="">— вакансия —</option>';
+      state.vacancies.forEach(function(v){ o += '<option value="'+v.id+'" '+(sel===v.id?"selected":"")+'>'+esc(v.title)+'</option>'; });
+      return o;
+    }
+    function condFields(){
+      var m = draft.meta||{}, s = draft.status, h = '<div class="cond">';
+      if(s==="nocall"){
+        h += fld("когда перезвонить", '<input type="date" data-m="callbackDate" value="'+(m.callbackDate||"")+'">');
+      } else if(s==="interview"){
+        h += fld("дата собеседования", '<input type="date" data-m="interviewDate" value="'+(m.interviewDate||"")+'">');
+        h += fld("время", '<input type="time" data-m="interviewTime" value="'+(m.interviewTime||"")+'">');
+      } else if(s==="noshow"){
+        h += fld("что дальше", '<select data-m="nextStep"><option value="">—</option>'+
+          opt("перенести собеседование",m.nextStep)+opt("дозвониться",m.nextStep)+opt("отказ",m.nextStep)+'</select>');
+      } else if(s==="think"){
+        h += fld("думает до", '<input type="date" data-m="thinkUntil" value="'+(m.thinkUntil||"")+'">');
+        h += fld("перезвонить", '<input type="date" data-m="callbackDate" value="'+(m.callbackDate||"")+'">');
+      } else if(s==="med"){
+        h += fld("дата медкомиссии", '<input type="date" data-m="medDate" value="'+(m.medDate||"")+'">');
+      } else if(s==="refuse-self" || s==="refuse-us"){
+        h += fld("причина", '<input list="reasonList" data-m="reason" value="'+esc(m.reason||"")+'" placeholder="выбери или впиши">');
+        h += '<datalist id="reasonList">'+ state.refs.reject.map(function(r){return '<option value="'+esc(r)+'">';}).join("") +'</datalist>';
+      } else if(s==="hired"){
+        h += fld("дата выхода", '<input type="date" data-m="startDate" value="'+(m.startDate||"")+'">');
+      } else {
+        h = '<div class="cond" style="display:none">';
+      }
+      return h + '</div>';
+    }
+    function opt(v,sel){ return '<option value="'+esc(v)+'" '+(sel===v?"selected":"")+'>'+esc(v)+'</option>'; }
+    function fld(l,inner){ return '<div class="field"><label>'+l+'</label>'+inner+'</div>'; }
+
+    function body(){
+      var h = '<h2>'+(isNew?"новый кандидат":"карточка кандидата")+'</h2>';
+      h += fld("фио", '<input data-k="fio" value="'+esc(draft.fio)+'" placeholder="имя и фамилия">');
+      h += fld("вакансия", '<select data-k="vacancy">'+vacOptions(draft.vacancy)+'</select>'+
+           '<button class="inline-add" id="addVacInline">+ добавить вакансию</button>');
+      h += '<div class="field"><label>возраст</label><input type="number" inputmode="numeric" data-k="age" value="'+esc(draft.age)+'" placeholder="лет"></div>';
+      h += fld("телефон", '<input type="tel" data-k="phone" value="'+esc(draft.phone)+'" placeholder="+7">');
+      h += '<div class="field"><label>опыт</label><div class="seg" id="expSeg">'+
+           '<button data-exp="есть" class="'+(draft.exp==="есть"?"on":"")+'">есть</button>'+
+           '<button data-exp="нет" class="'+(draft.exp==="нет"?"on":"")+'">нет</button></div></div>';
+      h += fld("статус", '<select data-k="status" id="stSel">'+ STATUSES.map(function(s){
+             return '<option value="'+s[0]+'" '+(draft.status===s[0]?"selected":"")+'>'+s[1]+'</option>'; }).join("") +'</select>');
+      h += '<div id="condWrap">'+condFields()+'</div>';
+      h += fld("характеристика", '<textarea data-k="note" placeholder="заметки о кандидате">'+esc(draft.note)+'</textarea>');
+      if(draft.history && draft.history.length){
+        h += '<div class="field"><label>история статусов</label><div class="hist">';
+        draft.history.slice().reverse().forEach(function(e){
+          h += '<div class="h"><span>'+ruDate(e.date)+'</span><b>'+esc(stName(e.to))+'</b>'+(e.extra?'<span>· '+esc(e.extra)+'</span>':'')+'</div>';
+        });
+        h += '</div></div>';
+      }
+      h += '<button class="btn" id="saveCand">сохранить</button>';
+      if(!isNew) h += '<button class="btn ghost" id="delCand">удалить кандидата</button>';
+      return h;
+    }
+
+    openSheet(body());
+
+    function readInputs(){
+      each(sheet.querySelectorAll("[data-k]"), function(el){
+        draft[el.getAttribute("data-k")] = el.value;
+      });
+      each(sheet.querySelectorAll("[data-m]"), function(el){
+        draft.meta[el.getAttribute("data-m")] = el.value;
+      });
+    }
+    sheet.querySelector("#stSel").onchange = function(){
+      readInputs();
+      draft.status = this.value;
+      sheet.querySelector("#condWrap").innerHTML = condFields();
+    };
+    each(sheet.querySelectorAll("#expSeg [data-exp]"), function(el){
+      el.onclick = function(){
+        draft.exp = el.getAttribute("data-exp");
+        each(sheet.querySelectorAll("#expSeg [data-exp]"), function(x){ x.classList.toggle("on", x===el); });
+      };
+    });
+    var av = sheet.querySelector("#addVacInline");
+    if(av) av.onclick = function(){
+      readInputs();
+      var name = prompt("название вакансии");
+      if(name && name.trim()){
+        var v = { id:uid(), title:name.trim(), dept:"", need:1, createdAt:isoToday() };
+        state.vacancies.push(v); save();
+        draft.vacancy = v.id;
+        openCand(null); // re-render fresh with the draft would be lost; instead re-open with current draft
+      }
+    };
+    // NOTE: keep it simple — re-open editor preserving draft
+    if(av) av.onclick = function(){
+      readInputs();
+      var name = prompt("название вакансии");
+      if(!name || !name.trim()) return;
+      var v = { id:uid(), title:name.trim(), dept:"", need:1, createdAt:isoToday() };
+      state.vacancies.push(v); save();
+      draft.vacancy = v.id;
+      // rebuild body with updated options
+      sheet.innerHTML = '<div class="handle"></div>'+body();
+      rebind();
+    };
+
+    function rebind(){
+      sheet.querySelector("#stSel").onchange = function(){
+        readInputs(); draft.status = this.value;
+        sheet.querySelector("#condWrap").innerHTML = condFields();
+      };
+      each(sheet.querySelectorAll("#expSeg [data-exp]"), function(el){
+        el.onclick = function(){
+          draft.exp = el.getAttribute("data-exp");
+          each(sheet.querySelectorAll("#expSeg [data-exp]"), function(x){ x.classList.toggle("on", x===el); });
+        };
+      });
+      var av2 = sheet.querySelector("#addVacInline");
+      if(av2) av2.onclick = function(){
+        readInputs();
+        var name = prompt("название вакансии");
+        if(!name || !name.trim()) return;
+        var v = { id:uid(), title:name.trim(), dept:"", need:1, createdAt:isoToday() };
+        state.vacancies.push(v); save();
+        draft.vacancy = v.id;
+        sheet.innerHTML = '<div class="handle"></div>'+body();
+        rebind();
+      };
+      sheet.querySelector("#saveCand").onclick = doSave;
+      var d = sheet.querySelector("#delCand");
+      if(d) d.onclick = doDelete;
+    }
+
+    function doSave(){
+      readInputs();
+      if(!draft.fio || !draft.fio.trim()){ alert("впиши имя"); return; }
+      var prevStatus = c.status;
+      // history
+      draft.history = draft.history || [];
+      if(isNew){
+        draft.history.push({ date:isoToday(), to:draft.status, extra:"" });
+      } else if(draft.status !== prevStatus){
+        draft.history.push({ date:isoToday(), to:draft.status, extra:condExtraText(draft) });
+      }
+      if(isNew){
+        state.candidates.push(draft);
+      } else {
+        var idx = state.candidates.indexOf(c);
+        state.candidates[idx] = draft;
+      }
+      save(); closeSheet(); render();
+    }
+    function doDelete(){
+      if(!confirm("удалить кандидата насовсем?")) return;
+      state.candidates = state.candidates.filter(function(x){ return x.id!==c.id; });
+      save(); closeSheet(); render();
+    }
+    sheet.querySelector("#saveCand").onclick = doSave;
+    var dl = sheet.querySelector("#delCand");
+    if(dl) dl.onclick = doDelete;
+  }
+  function condExtraText(c){
+    var m = c.meta||{};
+    if(c.status==="interview") return [ruShort(m.interviewDate), m.interviewTime].filter(Boolean).join(" ");
+    if(c.status==="med") return m.medDate?ruShort(m.medDate):"";
+    if(c.status==="think") return m.thinkUntil?("до "+ruShort(m.thinkUntil)):"";
+    if(c.status==="refuse-self"||c.status==="refuse-us") return m.reason||"";
+    if(c.status==="hired") return m.startDate?ruShort(m.startDate):"";
+    return "";
+  }
+
+  // ---- vacancy editor ----
+  function openVac(id){
+    var v = id ? findVac(id) : null;
+    var isNew = !v;
+    if(isNew) v = { id:uid(), title:"", dept:"", need:1, createdAt:isoToday() };
+    var d = JSON.parse(JSON.stringify(v));
+    var h = '<h2>'+(isNew?"новая вакансия":"вакансия")+'</h2>';
+    h += '<div class="field"><label>должность</label><input data-k="title" value="'+esc(d.title)+'" placeholder="например: продавец-кассир"></div>';
+    h += '<div class="field"><label>отдел</label><input data-k="dept" value="'+esc(d.dept)+'" placeholder="необязательно"></div>';
+    h += '<div class="field"><label>сколько человек нужно</label><input type="number" inputmode="numeric" data-k="need" value="'+esc(d.need)+'"></div>';
+    h += '<button class="btn" id="saveVac">сохранить</button>';
+    if(!isNew) h += '<button class="btn ghost" id="delVac">удалить вакансию</button>';
+    openSheet(h);
+    sheet.querySelector("#saveVac").onclick = function(){
+      each(sheet.querySelectorAll("[data-k]"), function(el){
+        d[el.getAttribute("data-k")] = el.getAttribute("data-k")==="need" ? (parseInt(el.value,10)||0) : el.value;
+      });
+      if(!d.title || !d.title.trim()){ alert("впиши должность"); return; }
+      if(isNew) state.vacancies.push(d);
+      else state.vacancies[state.vacancies.indexOf(v)] = d;
+      save(); closeSheet(); render();
+    };
+    var dv = sheet.querySelector("#delVac");
+    if(dv) dv.onclick = function(){
+      var used = state.candidates.filter(function(c){return c.vacancy===v.id;}).length;
+      if(!confirm(used ? ("на эту вакансию заведено "+used+" чел. всё равно удалить?") : "удалить вакансию?")) return;
+      state.vacancies = state.vacancies.filter(function(x){ return x.id!==v.id; });
+      save(); closeSheet(); render();
+    };
+  }
+
+  // ---- dismissal editor ----
+  function openFired(id){
+    var d = id ? findFired(id) : null;
+    var isNew = !d;
+    if(isNew) d = { id:uid(), fio:"", position:"", date:isoToday(), reason:"" };
+    var dr = JSON.parse(JSON.stringify(d));
+    var h = '<h2>'+(isNew?"увольнение":"запись")+'</h2>';
+    h += '<div class="field"><label>фио</label><input data-k="fio" value="'+esc(dr.fio)+'" placeholder="имя и фамилия"></div>';
+    h += '<div class="field"><label>должность</label><input data-k="position" value="'+esc(dr.position)+'"></div>';
+    h += '<div class="field"><label>дата увольнения</label><input type="date" data-k="date" value="'+esc(dr.date)+'"></div>';
+    h += '<div class="field"><label>причина</label><input list="dReason" data-k="reason" value="'+esc(dr.reason)+'" placeholder="выбери или впиши">'+
+         '<datalist id="dReason">'+ state.refs.dismiss.map(function(r){return '<option value="'+esc(r)+'">';}).join("") +'</datalist></div>';
+    h += '<div class="field muted" style="font-size:12px">месяц посчитается сам из&nbsp;даты</div>';
+    h += '<button class="btn" id="saveF">сохранить</button>';
+    if(!isNew) h += '<button class="btn ghost" id="delF">удалить запись</button>';
+    openSheet(h);
+    sheet.querySelector("#saveF").onclick = function(){
+      each(sheet.querySelectorAll("[data-k]"), function(el){ dr[el.getAttribute("data-k")] = el.value; });
+      if(!dr.fio || !dr.fio.trim()){ alert("впиши имя"); return; }
+      dr.month = monthName(dr.date);
+      if(isNew) state.dismissals.push(dr);
+      else state.dismissals[state.dismissals.indexOf(d)] = dr;
+      save(); closeSheet(); render();
+    };
+    var df = sheet.querySelector("#delF");
+    if(df) df.onclick = function(){
+      if(!confirm("удалить запись?")) return;
+      state.dismissals = state.dismissals.filter(function(x){ return x.id!==d.id; });
+      save(); closeSheet(); render();
+    };
+  }
+
+  // ---- settings ----
+  function openSettings(){
+    var h = '<h2>настройки</h2>';
+    h += refBlock("причины отказа", "reject");
+    h += refBlock("причины увольнения", "dismiss");
+    h += '<div class="field"><label>всё сразу</label>'+
+         '<button class="btn soft" id="sExp">выгрузить копию данных</button>'+
+         '<button class="btn soft" id="sImp" style="margin-top:8px">загрузить из копии</button>'+
+         '<input type="file" id="sImpFile" accept="application/json,.json" style="display:none">'+
+         '<button class="btn ghost" id="sClear" style="margin-top:14px">очистить все данные</button></div>';
+    openSheet(h);
+    each(sheet.querySelectorAll("[data-refadd]"), function(el){
+      el.onclick = function(){
+        var k = el.getAttribute("data-refadd");
+        var inp = sheet.querySelector('[data-refinput="'+k+'"]');
+        var v = (inp.value||"").trim(); if(!v) return;
+        state.refs[k].push(v); inp.value=""; save(); openSettings();
+      };
+    });
+    each(sheet.querySelectorAll("[data-refdel]"), function(el){
+      el.onclick = function(){
+        var p = el.getAttribute("data-refdel").split("|");
+        state.refs[p[0]].splice(parseInt(p[1],10),1); save(); openSettings();
+      };
+    });
+    sheet.querySelector("#sExp").onclick = doExport;
+    sheet.querySelector("#sImp").onclick = function(){ sheet.querySelector("#sImpFile").click(); };
+    sheet.querySelector("#sImpFile").onchange = doImport;
+    sheet.querySelector("#sClear").onclick = function(){
+      if(!confirm("удалить все данные из этого браузера? отменить нельзя")) return;
+      if(!confirm("точно? сделай копию заранее")) return;
+      localStorage.removeItem(KEY); state = load(); closeSheet(); setScreen("day");
+    };
+  }
+  function refBlock(title,k){
+    var h = '<div class="field"><label>'+title+'</label>';
+    state.refs[k].forEach(function(r,i){
+      h += '<div class="disc"><span>'+esc(r)+'</span><button class="chev" data-refdel="'+k+'|'+i+'" style="background:none;border:none;font-size:17px">×</button></div>';
+    });
+    h += '<div class="addrow" style="margin-top:8px"><input data-refinput="'+k+'" placeholder="добавить"><button data-refadd="'+k+'">+</button></div></div>';
+    return h;
+  }
+
+  // ---- export / import ----
+  function doExport(){
+    try{
+      var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "найм-копия-"+isoToday()+".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 8000);
+    }catch(e){ alert("не удалось выгрузить"); }
+  }
+  function doImport(e){
+    var f = e.target.files && e.target.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try{
+        var s = JSON.parse(r.result);
+        if(!s || !s.candidates){ alert("файл не похож на копию"); return; }
+        if(!confirm("заменить текущие данные данными из файла?")) return;
+        localStorage.setItem(KEY, JSON.stringify(s));
+        state = load(); closeSheet(); setScreen("day");
+      }catch(err){ alert("не получилось прочитать файл"); }
+    };
+    r.readAsText(f);
+  }
+
+  // ================= NAV / FAB =================
+  each(document.querySelectorAll("#nav button"), function(b){
+    b.onclick = function(){ candFilter="all"; setScreen(b.getAttribute("data-s")); };
+  });
+  document.getElementById("fab").onclick = function(){
+    if(screen==="cands" || screen==="day") openCand(null);
+    else if(screen==="vacs") openVac(null);
+    else if(screen==="fired") openFired(null);
+  };
+  document.getElementById("gearBtn").onclick = openSettings;
+
+  // date label
+  (function(){
+    var d = new Date();
+    var wd = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"][d.getDay()];
+    document.getElementById("today").textContent = wd + ", " + d.getDate() + " " + MONTHS[d.getMonth()];
+  })();
+
+  setScreen("day");
+})();
+</script>
+</body>
+</html>
