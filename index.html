@@ -578,7 +578,7 @@
       stageOrder.forEach(function(k){ if((by[k]||0) > bmax){ bmax = by[k]; bottleneck = k; } });
       var shortfall = Math.max(0, left - active.length);
 
-      h += '<details class="vac"><summary><div class="grow"><div class="name">'+esc(v.title||"без названия")+'</div>'+
+      h += '<details class="vac"><summary data-vacsw="'+v.id+'"><div class="grow"><div class="name">'+esc(v.title||"без названия")+'</div>'+
            '<div class="meta">нужно '+need+' · вышло '+hiredC.length+' · в работе '+active.length+'</div></div>'+
            (hot ? '<span class="tag hot">горит · '+ruShort(v.deadline)+'</span>' : '<span class="tag">'+ (left>0 ? "ещё "+left : "закрыта") +'</span>')+
            '<span class="chev">›</span></summary>';
@@ -829,6 +829,15 @@
     each(document.querySelectorAll("[data-editvac]"), function(el){
       el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openVac(el.getAttribute("data-editvac")); };
     });
+    each(document.querySelectorAll("[data-vacsw]"), function(el){
+      attachSwipe(el, function(){
+        var id = el.getAttribute("data-vacsw"), v = findVac(id); if(!v) return;
+        var used = state.candidates.filter(function(c){ return c.vacancy===id; }).length;
+        if(confirm(used ? ("на вакансию «"+(v.title||"")+"» заведено "+used+" чел. удалить вакансию?") : ("удалить вакансию «"+(v.title||"")+"»?"))){
+          state.vacancies = state.vacancies.filter(function(x){ return x.id!==id; }); save(); render();
+        }
+      });
+    });
     // attention / interview quick actions
     each(document.querySelectorAll("[data-act]"), function(el){
       el.onclick = function(ev){
@@ -928,14 +937,20 @@
       }
       return h + '</div>';
     }
+    var showOutcome = false;
     function outcomeBlock(){
-      if(draft.status!=="interview") return "";
+      if(draft.status!=="interview"){ showOutcome = false; return ""; }
+      if(!showOutcome){
+        return '<div class="outcome"><div class="lab">когда собеседование состоится — отметь исход</div><div class="mini">'+
+          '<button type="button" data-passed="1">собеседование прошло</button>'+
+          '<button type="button" class="warn" data-oc="noshow">не пришёл</button>'+
+          '</div></div>';
+      }
       return '<div class="outcome"><div class="lab">исход собеседования</div><div class="mini">'+
         '<button type="button" data-oc="med">на медкомиссию</button>'+
         '<button type="button" data-oc="think">думает</button>'+
         '<button type="button" data-oc="refuse-us">отказали мы</button>'+
         '<button type="button" data-oc="hired">вышел на работу</button>'+
-        '<button type="button" class="warn" data-oc="noshow">не пришёл</button>'+
         '</div></div>';
     }
     function body(){
@@ -1001,6 +1016,9 @@
       fillRate();
     }
     function wireCond(){
+      each(sheet.querySelectorAll("[data-passed]"), function(el){
+        el.onclick = function(){ showOutcome = true; rebuildCond(); };
+      });
       each(sheet.querySelectorAll("[data-oc]"), function(el){
         el.onclick = function(){ draft.status = el.getAttribute("data-oc"); rebuildCond(); };
       });
