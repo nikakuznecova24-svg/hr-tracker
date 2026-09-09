@@ -30,8 +30,8 @@
     --aura1:rgba(184,166,232,.38);
     --aura2:rgba(245,198,214,.34);
     --aura3:rgba(168,197,232,.30);
-    --shadow:0 10px 34px rgba(58,48,92,.10), 0 2px 8px rgba(58,48,92,.06);
-    --radius:22px;
+    --shadow:0 14px 40px rgba(58,48,92,.11), 0 3px 10px rgba(58,48,92,.055);
+    --radius:24px;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -54,9 +54,10 @@
     color:var(--ink);
     background:var(--bg);
     background-image:
-      radial-gradient(52vw 52vw at 8% 0%, var(--aura1), transparent 62%),
-      radial-gradient(46vw 46vw at 98% 8%, var(--aura2), transparent 60%),
-      radial-gradient(60vw 60vw at 50% 100%, var(--aura3), transparent 60%);
+      radial-gradient(70vw 46vw at 50% -8%, var(--aura2), transparent 66%),
+      radial-gradient(58vw 58vw at 4% 2%, var(--aura1), transparent 60%),
+      radial-gradient(52vw 52vw at 100% 12%, var(--aura3), transparent 58%),
+      radial-gradient(64vw 64vw at 50% 104%, var(--aura1), transparent 60%);
     background-attachment:fixed;
     -webkit-font-smoothing:antialiased;
     font-size:15px;
@@ -69,15 +70,16 @@
   .wrap{max-width:560px;margin:0 auto;padding:0 16px}
 
   .top{padding:calc(16px + env(safe-area-inset-top)) 0 6px}
+  .top{padding-bottom:10px}
   .top .date{color:var(--ink-soft);font-size:13px}
-  .top h1{font-size:27px;margin-top:2px}
+  .top h1{font-size:26px;font-weight:600;margin-top:3px;letter-spacing:-.01em}
   .top .gear{position:absolute;right:16px;top:calc(18px + env(safe-area-inset-top));width:38px;height:38px;border:none;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
   .top .themeBtn{position:absolute;right:62px;top:calc(18px + env(safe-area-inset-top));width:38px;height:38px;border:none;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--accent)}
   .top .themeBtn:active{background:var(--accent-soft)}
   .top-in{position:relative}
 
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px;margin:12px 0}
-  .card > h2{font-size:17px;margin-bottom:2px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;margin:14px 0}
+  .card > h2{font-size:17px;font-weight:700;margin-bottom:2px}
   .card .sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:10px}
   .card.attn{background:linear-gradient(180deg,#fff, #fbf5f6);border:1px solid #f2dfe3}
   .muted{color:var(--ink-soft)}
@@ -110,7 +112,7 @@
   .mini button.warn{color:var(--bad)}
 
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chips .chip{padding:9px 13px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:13px;font-weight:500}
+  .chips .chip{padding:10px 14px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:13px;font-weight:600;box-shadow:0 1px 3px rgba(60,50,90,.05)}
   .chips .chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .chips .chip.s-nocall.on{border-color:#b07a44;color:#b07a44;background:rgba(176,122,68,.12)}
   .chips .chip.s-interview.on{border-color:#5f68cc;color:#5f68cc;background:rgba(95,104,204,.12)}
@@ -119,11 +121,28 @@
   .chips .chip.s-med.on{border-color:#3f9270;color:#3f9270;background:rgba(63,146,112,.12)}
   .chips .chip.s-refuse-self.on,.chips .chip.s-refuse-us.on{border-color:#b85c70;color:#b85c70;background:rgba(184,92,112,.12)}
   .chips .chip.s-hired.on{border-color:#2f9463;color:#2f9463;background:rgba(47,148,99,.12)}
+  .chips .chip.rate-yes.on{border-color:#2f9463;color:#2f9463;background:rgba(47,148,99,.12)}
+  .chips .chip.rate-maybe.on{border-color:#b1832f;color:#b1832f;background:rgba(177,131,47,.12)}
+  .chips .chip.rate-no.on{border-color:#c0687a;color:#c0687a;background:rgba(192,104,122,.12)}
 
-  .chk{width:22px;height:22px;border-radius:7px;border:1.6px solid #cfc8e0;flex:none;display:flex;align-items:center;justify-content:center;background:transparent}
+  .cal .day{padding:10px 0;border-top:1px solid var(--line)}
+  .cal .day:first-child{border-top:none}
+  .cal .dh{font-weight:600;font-size:12.5px;margin-bottom:4px;color:var(--ink)}
+  .cal .dh.wk{color:var(--accent)}
+  .cal .ev{display:flex;gap:8px;font-size:13px;padding:3px 0}
+  .cal .ev .tm{color:var(--ink-soft);flex:none;width:44px}
+  .cal .ev.clash .tm{color:var(--bad)}
+  .cal .none{color:var(--ink-soft);font-size:12.5px}
+
+  .chk{width:24px;height:24px;border-radius:8px;border:2px solid var(--accent);flex:none;display:flex;align-items:center;justify-content:center;background:var(--card)}
   .chk.on{background:var(--accent);border-color:var(--accent)}
   .chk.on svg{display:block}
   .chk svg{display:none;color:#fff}
+  .tasklist{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+  .tasklist .task{border:none;margin:0;border-radius:14px;background:var(--accent-soft);padding:13px 13px;gap:13px}
+  .tasklist .task .grow{font-weight:500;line-height:1.35}
+  .tasklist .task.done{background:var(--pill-bg)}
+  .tasklist .task.done .chk{border-color:var(--ink-soft)}
   .task.done .grow{color:var(--ink-soft);text-decoration:line-through}
 
   .fab{position:fixed;right:16px;bottom:calc(82px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 12px 30px rgba(107,95,168,.45);font-size:27px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:40}
@@ -334,6 +353,8 @@
     bindView();
   }
 
+  function ratingName(r){ return r==="yes"?"подходит":r==="maybe"?"сомнения":r==="no"?"не подходит":""; }
+
   // ---- quick status change with history ----
   function condExtra(c, st){
     st = st || c.status; var m = c.meta||{};
@@ -368,7 +389,9 @@
            '<div class="brk" style="padding-left:0">'+
            '• круглая кнопка «+» справа внизу — добавить кандидата, вакансию или запись<br>'+
            '• нажми на строку с человеком — откроется карточка<br>'+
+           '• смахни строку влево — удалить (спросит подтверждение)<br>'+
            '• в карточке двигай статус кнопками-плашками, поля появятся сами<br>'+
+           '• солнце/луна вверху справа — светлая или тёмная тема<br>'+
            '• внизу — переключение между разделами'+
            '</div><button class="btn sm" id="hintOk" style="margin-top:10px">понятно</button></div>';
     }
@@ -407,8 +430,12 @@
     h += '<div class="card"><h2>задачи на сегодня</h2><div class="sub">'+ todayTasks.length +' активных · '+ doneToday.length +' сделано</div>';
     h += '<div class="addrow"><input id="taskInput" placeholder="новая задача" maxlength="140"><button id="taskAdd">+</button></div>';
     if(!todayTasks.length && !doneToday.length) h += '<div class="empty">пока пусто</div>';
-    todayTasks.forEach(function(x){ h += taskRow(x); });
-    doneToday.forEach(function(x){ h += taskRow(x); });
+    else {
+      h += '<div class="tasklist">';
+      todayTasks.forEach(function(x){ h += taskRow(x); });
+      doneToday.forEach(function(x){ h += taskRow(x); });
+      h += '</div>';
+    }
     h += '</div>';
 
     var interviews = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===t; })
@@ -421,6 +448,33 @@
            '<div class="pill">'+ (c.meta&&c.meta.interviewTime ? esc(c.meta.interviewTime) : "время?") +'</div><span class="chev">›</span></div>'+
            '<div class="mini"><button data-act="passed" data-id="'+c.id+'">собес прошёл</button><button class="warn" data-act="noshow" data-id="'+c.id+'">не пришёл</button></div></div>';
     });
+    h += '</div>';
+
+    // ---- собеседования на неделю ----
+    h += '<div class="card cal"><h2>собеседования на неделю</h2>';
+    var anyWeek = false;
+    for(var wd=0; wd<7; wd++){
+      var day = isoShift(wd);
+      var ints = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===day; })
+        .sort(function(a,b){ return (a.meta.interviewTime||"").localeCompare(b.meta.interviewTime||""); });
+      var meds = state.candidates.filter(function(c){ return c.status==="med" && c.meta && c.meta.medDate===day; });
+      if(!ints.length && !meds.length) continue;
+      anyWeek = true;
+      var tc = {};
+      ints.forEach(function(c){ var tm=c.meta.interviewTime; if(tm) tc[tm]=(tc[tm]||0)+1; });
+      var dObj = new Date(day);
+      var wn = ["вс","пн","вт","ср","чт","пт","сб"][dObj.getDay()];
+      h += '<div class="day"><div class="dh'+(wd===0?" wk":"")+'">'+wn+' '+ruShort(day)+(wd===0?' · сегодня':'')+'</div>';
+      ints.forEach(function(c){
+        var clash = c.meta.interviewTime && tc[c.meta.interviewTime]>1;
+        h += '<div class="ev'+(clash?" clash":"")+'" data-cand="'+c.id+'"><span class="tm">'+esc(c.meta.interviewTime||"—")+'</span><span class="grow">'+esc(c.fio||"без имени")+(clash?" · наложение":"")+'</span></div>';
+      });
+      meds.forEach(function(c){
+        h += '<div class="ev" data-cand="'+c.id+'"><span class="tm">мк</span><span class="grow">'+esc(c.fio||"без имени")+'</span></div>';
+      });
+      h += '</div>';
+    }
+    if(!anyWeek) h += '<div class="empty">на ближайшую неделю встреч нет</div>';
     h += '</div>';
 
     var toCall = state.candidates.filter(function(c){
@@ -668,6 +722,13 @@
       txt += "  " + s[1] + " — " + C.filter(function(c){return c.status===s[0];}).length + "\n";
     });
 
+    var rc = {yes:0,maybe:0,no:0};
+    C.forEach(function(c){ if(c.meta && c.meta.rating && rc[c.meta.rating]!=null) rc[c.meta.rating]++; });
+    if(rc.yes+rc.maybe+rc.no > 0){
+      txt += "\nоценки кандидатов:\n";
+      txt += "  подходит — " + rc.yes + "\n  сомнения — " + rc.maybe + "\n  не подходит — " + rc.no + "\n";
+    }
+
     if(state.vacancies.length){
       txt += "\nпо вакансиям:\n";
       state.vacancies.forEach(function(v){
@@ -718,12 +779,52 @@
   }
 
   // ================= BIND =================
+  function attachSwipe(el, onDelete){
+    var sx=0, sy=0, dx=0, active=false, decided=false;
+    el.addEventListener("touchstart", function(e){
+      if(e.touches.length!==1) return;
+      var tt=e.touches[0]; sx=tt.clientX; sy=tt.clientY; dx=0; active=true; decided=false;
+      el.style.transition="none";
+    }, {passive:true});
+    el.addEventListener("touchmove", function(e){
+      if(!active) return;
+      var tt=e.touches[0], mx=tt.clientX-sx, my=tt.clientY-sy;
+      if(!decided){
+        if(Math.abs(mx)<8 && Math.abs(my)<8) return;
+        decided=true;
+        if(Math.abs(my)>Math.abs(mx)){ active=false; el.style.transform=""; return; }
+      }
+      dx = Math.max(-104, Math.min(0, mx));
+      el.style.transform = "translateX("+dx+"px)";
+      el.style.background = dx < -30 ? "rgba(193,92,107,.12)" : "";
+    }, {passive:true});
+    el.addEventListener("touchend", function(){
+      if(!active) return;
+      active=false;
+      el.style.transition="transform .18s";
+      el.style.transform=""; el.style.background="";
+      if(dx < -58) setTimeout(onDelete, 60);
+    }, {passive:true});
+  }
+
   function bindView(){
     each(document.querySelectorAll("[data-cand]"), function(el){
       el.onclick = function(e){ if(e.target.closest("[data-deltask],[data-toggle],[data-act]")) return; openCand(el.getAttribute("data-cand")); };
     });
+    each(document.querySelectorAll(".row[data-cand]"), function(el){
+      attachSwipe(el, function(){
+        var id = el.getAttribute("data-cand"), c = findCand(id); if(!c) return;
+        if(confirm("удалить кандидата «"+(c.fio||"без имени")+"»?")){ state.candidates = state.candidates.filter(function(x){ return x.id!==id; }); save(); render(); }
+      });
+    });
     each(document.querySelectorAll("[data-fired]"), function(el){
       el.onclick = function(){ openFired(el.getAttribute("data-fired")); };
+    });
+    each(document.querySelectorAll(".row[data-fired]"), function(el){
+      attachSwipe(el, function(){
+        var id = el.getAttribute("data-fired");
+        if(confirm("удалить запись об увольнении?")){ state.dismissals = state.dismissals.filter(function(x){ return x.id!==id; }); save(); render(); }
+      });
     });
     each(document.querySelectorAll("[data-editvac]"), function(el){
       el.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openVac(el.getAttribute("data-editvac")); };
@@ -851,6 +952,7 @@
              return '<button type="button" class="chip '+s[2]+' '+(draft.status===s[0]?"on":"")+'" data-st="'+s[0]+'">'+s[1]+'</button>'; }).join("") +'</div></div>';
       h += '<div id="ocWrap">'+outcomeBlock()+'</div>';
       h += '<div id="condWrap">'+condFields()+'</div>';
+      h += '<div id="rateWrap"></div>';
       if(state.refs.templates && state.refs.templates.length && !isNew)
         h += '<div class="field"><label>сообщение кандидату</label><div class="mini" id="tplRow">'+
           state.refs.templates.map(function(t,i){ return '<button type="button" data-tpl="'+i+'">'+esc(t.name)+'</button>'; }).join("")+'</div></div>';
@@ -858,7 +960,8 @@
       if(draft.history && draft.history.length){
         h += '<div class="field"><label>история статусов</label><div class="hist">';
         draft.history.slice().reverse().forEach(function(e){
-          h += '<div class="h"><span>'+ruDate(e.date)+'</span><b>'+esc(stName(e.to))+'</b>'+(e.extra?'<span>· '+esc(e.extra)+'</span>':'')+'</div>';
+          var main = e.label ? esc(e.label) : ('<b>'+esc(stName(e.to))+'</b>'+(e.extra?'<span>· '+esc(e.extra)+'</span>':''));
+          h += '<div class="h"><span>'+ruDate(e.date)+'</span>'+main+'</div>';
         });
         h += '</div></div>';
       }
@@ -871,12 +974,31 @@
       each(sheet.querySelectorAll("[data-k]"), function(el){ draft[el.getAttribute("data-k")] = el.value; });
       each(sheet.querySelectorAll("[data-m]"), function(el){ draft.meta[el.getAttribute("data-m")] = el.value; });
     }
+    function rateInner(){
+      if(["interview","think","med","refuse-us","hired"].indexOf(draft.status)<0) return "";
+      var m = draft.meta||{};
+      var opts = [["yes","подходит"],["maybe","сомнения"],["no","не подходит"]];
+      return '<div class="field"><label>оценка после собеседования</label><div class="chips" id="rateChips">'+
+        opts.map(function(o){ return '<button type="button" class="chip rate-'+o[0]+(m.rating===o[0]?" on":"")+'" data-rate="'+o[0]+'">'+o[1]+'</button>'; }).join("")+
+        '</div><input data-m="verdict" value="'+esc(m.verdict||"")+'" placeholder="короткий вывод" style="margin-top:8px"></div>';
+    }
+    function fillRate(){
+      var w = sheet.querySelector("#rateWrap"); if(!w) return;
+      w.innerHTML = rateInner();
+      each(sheet.querySelectorAll("#rateChips [data-rate]"), function(el){
+        el.onclick = function(){
+          draft.meta.rating = el.getAttribute("data-rate");
+          each(sheet.querySelectorAll("#rateChips [data-rate]"), function(x){ x.classList.toggle("on", x===el); });
+        };
+      });
+    }
     function rebuildCond(){
       readInputs();
       each(sheet.querySelectorAll("#stChips [data-st]"), function(x){ x.classList.toggle("on", x.getAttribute("data-st")===draft.status); });
       sheet.querySelector("#ocWrap").innerHTML = outcomeBlock();
       sheet.querySelector("#condWrap").innerHTML = condFields();
       wireCond();
+      fillRate();
     }
     function wireCond(){
       each(sheet.querySelectorAll("[data-oc]"), function(el){
@@ -936,6 +1058,7 @@
         };
       });
       wireCond();
+      fillRate();
       sheet.querySelector("#saveCand").onclick = doSave;
       var d = sheet.querySelector("#delCand");
       if(d) d.onclick = doDelete;
@@ -945,9 +1068,12 @@
       readInputs();
       if(!draft.fio || !draft.fio.trim()){ alert("впиши имя"); return; }
       var prevStatus = ref ? ref.status : null;
+      var prevRating = (ref && ref.meta) ? ref.meta.rating : null;
       draft.history = draft.history || [];
       if(isNew) draft.history.push({ date:isoToday(), to:draft.status, extra:"" });
       else if(draft.status !== prevStatus) draft.history.push({ date:isoToday(), to:draft.status, extra:condExtra(draft, draft.status) });
+      if(draft.meta.rating && draft.meta.rating !== prevRating)
+        draft.history.push({ date:isoToday(), label:"оценка: "+ratingName(draft.meta.rating)+(draft.meta.verdict?" — "+draft.meta.verdict:"") });
       if(isNew) state.candidates.push(draft);
       else state.candidates[state.candidates.indexOf(ref)] = draft;
       save(); closeSheet(); render();
@@ -1043,12 +1169,7 @@
 
   // ---- settings ----
   function openSettings(){
-    var th = getTheme();
     var h = '<h2>настройки</h2>';
-    h += '<div class="field"><label>тема</label><div class="chips" id="themeChips">'+
-         [["auto","как в телефоне"],["light","светлая"],["dark","тёмная"]].map(function(o){
-           return '<button type="button" class="chip'+(th===o[0]?" on":"")+'" data-theme="'+o[0]+'">'+o[1]+'</button>'; }).join("")+
-         '</div></div>';
     h += refBlock("причины отказа", "reject");
     h += refBlock("причины увольнения", "dismiss");
     h += '<div class="field"><label>шаблоны сообщений</label>';
@@ -1064,12 +1185,6 @@
          '<input type="file" id="sImpFile" accept="application/json,.json" style="display:none">'+
          '<button class="btn ghost" id="sClear" style="margin-top:14px">очистить все данные</button></div>';
     openSheet(h);
-    each(sheet.querySelectorAll("#themeChips [data-theme]"), function(el){
-      el.onclick = function(){
-        setTheme(el.getAttribute("data-theme"));
-        each(sheet.querySelectorAll("#themeChips [data-theme]"), function(x){ x.classList.toggle("on", x===el); });
-      };
-    });
     each(sheet.querySelectorAll("[data-refadd]"), function(el){
       el.onclick = function(){
         var k = el.getAttribute("data-refadd");
@@ -1173,6 +1288,10 @@
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("sw.js").catch(function(){});
+      var reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function(){
+        if(reloaded) return; reloaded = true; location.reload();
+      });
     });
   }
 })();
