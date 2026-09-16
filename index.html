@@ -81,7 +81,7 @@
   .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;margin:14px 0}
   .card > h2{font-size:17px;font-weight:700;margin-bottom:2px}
   .card .sub{color:var(--ink-soft);font-size:12.5px;margin-bottom:10px}
-  .card.attn{background:linear-gradient(180deg,#fff, #fbf5f6);border:1px solid #f2dfe3}
+  .card.attn{background:linear-gradient(180deg, var(--card), color-mix(in srgb, var(--aura2) 38%, var(--card)));border:1px solid color-mix(in srgb, var(--aura2) 65%, var(--line))}
   .muted{color:var(--ink-soft)}
   .empty{color:var(--ink-soft);font-size:13.5px;padding:8px 2px}
 
@@ -742,7 +742,16 @@
     var hiredMonth = C.filter(function(c){return c.status==="hired" && c.meta && monthKey(c.meta.startDate)===mk;}).length;
     var firedMonth = state.dismissals.filter(function(d){return monthKey(d.date)===mk;}).length;
 
-    var h = '<div class="grid">';
+    var allNeed = state.vacancies.reduce(function(a,v){ return a+(v.need||0); },0);
+    var allHired = C.filter(function(c){return c.status==="hired";}).length;
+    var sPct = allNeed ? Math.min(1, allHired/allNeed) : 0;
+    var sR = 80, sARC = Math.PI*sR, sOFF = sARC*(1-sPct);
+    var h = '<div class="card hero"><div class="gauge"><div class="gwrap">'+
+         '<svg viewBox="0 0 200 110"><path d="M20,100 A80,80 0 0,1 180,100" class="gtrack"/>'+
+         (allNeed ? '<path d="M20,100 A80,80 0 0,1 180,100" class="gfill" style="stroke-dasharray:'+sARC.toFixed(1)+';stroke-dashoffset:'+sOFF.toFixed(1)+'"/>' : '')+
+         '</svg><div class="gnum"><b>'+allHired+'/'+allNeed+'</b><span>мест закрыто</span></div>'+
+         '</div></div></div>';
+    h += '<div class="grid">';
     h += stat(openVac.length, "открытых вакансий");
     h += stat(needMore, "ещё нужно людей");
     h += stat(intToday, "собесов сегодня");
