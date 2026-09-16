@@ -85,7 +85,7 @@
   .muted{color:var(--ink-soft)}
   .empty{color:var(--ink-soft);font-size:13.5px;padding:8px 2px}
 
-  .hero{position:relative;overflow:hidden;background:color-mix(in srgb, var(--card) 72%, transparent);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border:1px solid color-mix(in srgb, var(--line) 55%, transparent);padding-top:52px;padding-bottom:8px}
+  .hero{position:relative;overflow:hidden;background:color-mix(in srgb, var(--card) 72%, transparent);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border:1px solid color-mix(in srgb, var(--line) 55%, transparent);padding-bottom:8px}
   .hero::before{content:"";position:absolute;inset:-60% -10% -10% -10%;background:
       radial-gradient(55% 55% at 25% 20%, var(--aura1), transparent 70%),
       radial-gradient(50% 50% at 85% 10%, var(--aura2), transparent 70%),
@@ -100,7 +100,6 @@
   .gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;display:flex;flex-direction:column;align-items:center}
   .gnum b{font-family:"Manrope",sans-serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1}
   .gnum span{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
-  .capsule{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb, var(--card) 88%, transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid color-mix(in srgb, var(--line) 55%, transparent);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--ink);box-shadow:0 6px 18px rgba(60,50,90,.10)}
 
   .row{display:flex;align-items:center;gap:12px;padding:12px 8px;margin:0 -8px;border-top:1px solid var(--line);border-radius:12px}
   .row:first-of-type{border-top:none}
@@ -458,8 +457,7 @@
     var gTotal = todayTasks.length + doneToday.length, gDone = doneToday.length;
     var gPct = gTotal ? gDone/gTotal : 0;
     var R = 80, ARC = Math.PI*R, OFF = ARC*(1-gPct);
-    var intTodayCnt = state.candidates.filter(function(c){ return c.status==="interview" && c.meta && c.meta.interviewDate===t; }).length;
-    h += '<div class="card hero"><div class="capsule">собеседования сегодня: '+intTodayCnt+'</div><div class="gauge"><div class="gwrap">'+
+    h += '<div class="card hero"><div class="gauge"><div class="gwrap">'+
          '<svg viewBox="0 0 200 110"><path d="M20,100 A80,80 0 0,1 180,100" class="gtrack"/>'+
          (gTotal ? '<path d="M20,100 A80,80 0 0,1 180,100" class="gfill" style="stroke-dasharray:'+ARC.toFixed(1)+';stroke-dashoffset:'+OFF.toFixed(1)+'"/>' : '')+
          '</svg><div class="gnum"><b>'+gDone+'/'+gTotal+'</b><span>задачи дня сделаны</span></div>'+
@@ -748,7 +746,7 @@
     var allHired = C.filter(function(c){return c.status==="hired";}).length;
     var sPct = allNeed ? Math.min(1, allHired/allNeed) : 0;
     var sR = 80, sARC = Math.PI*sR, sOFF = sARC*(1-sPct);
-    var h = '<div class="card hero"><div class="capsule">ещё нужно: '+needMore+'</div><div class="gauge"><div class="gwrap">'+
+    var h = '<div class="card hero"><div class="gauge"><div class="gwrap">'+
          '<svg viewBox="0 0 200 110"><path d="M20,100 A80,80 0 0,1 180,100" class="gtrack"/>'+
          (allNeed ? '<path d="M20,100 A80,80 0 0,1 180,100" class="gfill" style="stroke-dasharray:'+sARC.toFixed(1)+';stroke-dashoffset:'+sOFF.toFixed(1)+'"/>' : '')+
          '</svg><div class="gnum"><b>'+allHired+'/'+allNeed+'</b><span>мест закрыто</span></div>'+
