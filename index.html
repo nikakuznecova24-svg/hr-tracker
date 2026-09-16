@@ -85,6 +85,22 @@
   .muted{color:var(--ink-soft)}
   .empty{color:var(--ink-soft);font-size:13.5px;padding:8px 2px}
 
+  .hero{position:relative;overflow:hidden;background:color-mix(in srgb, var(--card) 72%, transparent);backdrop-filter:saturate(160%) blur(20px);-webkit-backdrop-filter:saturate(160%) blur(20px);border:1px solid color-mix(in srgb, var(--line) 55%, transparent);padding-bottom:8px}
+  .hero::before{content:"";position:absolute;inset:-60% -10% -10% -10%;background:
+      radial-gradient(55% 55% at 25% 20%, var(--aura1), transparent 70%),
+      radial-gradient(50% 50% at 85% 10%, var(--aura2), transparent 70%),
+      radial-gradient(55% 55% at 55% 95%, var(--aura3), transparent 70%);
+    z-index:0}
+  .hero > *{position:relative;z-index:1}
+  .gauge{display:flex;justify-content:center}
+  .gwrap{position:relative;width:100%;max-width:230px}
+  .gwrap svg{display:block;width:100%;height:auto;overflow:visible}
+  .gtrack{fill:none;stroke:color-mix(in srgb, var(--ink) 12%, transparent);stroke-width:14;stroke-linecap:round}
+  .gfill{fill:none;stroke:var(--accent);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .4s ease}
+  .gnum{position:absolute;left:0;right:0;bottom:2px;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .gnum b{font-family:"Manrope",sans-serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1}
+  .gnum span{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
+
   .row{display:flex;align-items:center;gap:12px;padding:12px 8px;margin:0 -8px;border-top:1px solid var(--line);border-radius:12px}
   .row:first-of-type{border-top:none}
   .row[data-cand]:active,.row[data-fired]:active,.rowcol[data-cand]:active{background:var(--accent-soft)}
@@ -100,8 +116,8 @@
   .pill.s-new{color:#7f8399}
   .pill.s-nocall{color:#b07a44}
   .pill.s-interview{color:#5f68cc}
-  .pill.s-noshow{color:#c0687a}
-  .pill.s-think{color:#b1832f}
+  .pill.s-noshow{color:#cf6a3f}
+  .pill.s-think{color:#d4a017}
   .pill.s-med{color:#3f9270}
   .pill.s-refuse-self,.pill.s-refuse-us{color:#b85c70}
   .pill.s-hired{color:#2f9463}
@@ -116,8 +132,8 @@
   .chips .chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .chips .chip.s-nocall.on{border-color:#b07a44;color:#b07a44;background:rgba(176,122,68,.12)}
   .chips .chip.s-interview.on{border-color:#5f68cc;color:#5f68cc;background:rgba(95,104,204,.12)}
-  .chips .chip.s-noshow.on{border-color:#c0687a;color:#c0687a;background:rgba(192,104,122,.12)}
-  .chips .chip.s-think.on{border-color:#b1832f;color:#b1832f;background:rgba(177,131,47,.12)}
+  .chips .chip.s-noshow.on{border-color:#cf6a3f;color:#cf6a3f;background:rgba(207,106,63,.12)}
+  .chips .chip.s-think.on{border-color:#d4a017;color:#d4a017;background:rgba(212,160,23,.12)}
   .chips .chip.s-med.on{border-color:#3f9270;color:#3f9270;background:rgba(63,146,112,.12)}
   .chips .chip.s-refuse-self.on,.chips .chip.s-refuse-us.on{border-color:#b85c70;color:#b85c70;background:rgba(184,92,112,.12)}
   .chips .chip.s-hired.on{border-color:#2f9463;color:#2f9463;background:rgba(47,148,99,.12)}
@@ -163,6 +179,7 @@
   .fn{display:flex;flex-direction:column;gap:7px;margin-top:4px}
   .fn .step{display:flex;align-items:center;gap:10px}
   .fn .bar{height:26px;border-radius:8px;background:var(--accent-soft);flex:none;min-width:26px;display:flex;align-items:center;justify-content:flex-end;padding:0 8px;font-size:12px;color:var(--accent);font-weight:500}
+  .fn .bar.stuck{background:rgba(207,106,63,.18);color:#cf6a3f}
   .fn .lab{color:var(--ink-soft);font-size:12.5px}
 
   .scrim{position:fixed;inset:0;background:rgba(38,32,58,.42);z-index:50;opacity:0;pointer-events:none;transition:opacity .18s}
@@ -435,6 +452,17 @@
     var t = isoToday(), tm = isoShift(1);
     var h = "";
 
+    var todayTasks = state.tasks.filter(function(x){ return !x.done && (!x.date || x.date<=t); });
+    var doneToday  = state.tasks.filter(function(x){ return x.done; });
+    var gTotal = todayTasks.length + doneToday.length, gDone = doneToday.length;
+    var gPct = gTotal ? gDone/gTotal : 0;
+    var R = 80, ARC = Math.PI*R, OFF = ARC*(1-gPct);
+    h += '<div class="card hero"><div class="gauge"><div class="gwrap">'+
+         '<svg viewBox="0 0 200 110"><path d="M20,100 A80,80 0 0,1 180,100" class="gtrack"/>'+
+         (gTotal ? '<path d="M20,100 A80,80 0 0,1 180,100" class="gfill" style="stroke-dasharray:'+ARC.toFixed(1)+';stroke-dashoffset:'+OFF.toFixed(1)+'"/>' : '')+
+         '</svg><div class="gnum"><b>'+gDone+'/'+gTotal+'</b><span>задачи дня сделаны</span></div>'+
+         '</div></div></div>';
+
     var hintSeen; try{ hintSeen = localStorage.getItem("hrtrk_hint"); }catch(e){}
     if(!hintSeen){
       h += '<div class="card" id="hintCard"><h2>как пользоваться</h2>'+
@@ -477,8 +505,6 @@
       h += '</div>';
     }
 
-    var todayTasks = state.tasks.filter(function(x){ return !x.done && (!x.date || x.date<=t); });
-    var doneToday  = state.tasks.filter(function(x){ return x.done; });
     h += '<div class="card"><h2>задачи на сегодня</h2><div class="sub">'+ todayTasks.length +' активных · '+ doneToday.length +' сделано</div>';
     h += '<div class="addrow"><input id="taskInput" placeholder="новая задача" maxlength="140"><button id="taskAdd">+</button></div>';
     if(!todayTasks.length && !doneToday.length) h += '<div class="empty">пока пусто</div>';
@@ -731,10 +757,13 @@
     var steps = [["new","новый"],["nocall","не дозвонились"],["interview","на собеседовании"],["med","на медкомиссии"],["hired","вышли на работу"]];
     var counts = steps.map(function(s){ return C.filter(function(c){return c.status===s[0];}).length; });
     var mx = Math.max.apply(null, counts.concat([1]));
+    var stuckIdx = -1, stuckMax = 0;
+    counts.forEach(function(n,i){ if(i<counts.length-1 && n>stuckMax){ stuckMax=n; stuckIdx=i; } });
     h += '<div class="card"><h2>воронка сейчас</h2><div class="fn">';
     steps.forEach(function(s,i){
       var w = 26 + Math.round((counts[i]/mx) * 220);
-      h += '<div class="step"><div class="bar" style="width:'+w+'px">'+counts[i]+'</div><div class="lab">'+s[1]+'</div></div>';
+      var stuck = (i===stuckIdx && stuckMax>0);
+      h += '<div class="step"><div class="bar'+(stuck?" stuck":"")+'" style="width:'+w+'px">'+counts[i]+'</div><div class="lab">'+s[1]+(stuck?' <span class="muted">· затор</span>':'')+'</div></div>';
     });
     h += '</div>';
     var totalC = C.length;
@@ -1321,7 +1350,7 @@
          '<button class="btn soft" id="sExp">выгрузить копию данных</button>'+
          '<button class="btn soft" id="sImp" style="margin-top:8px">загрузить из копии</button>'+
          '<input type="file" id="sImpFile" accept="application/json,.json" style="display:none">'+
-         '<button class="btn ghost" id="sClear" style="margin-top:14px">очистить все данные</button></div>';
+         '<button class="btn ghost" id="sClear">очистить все данные</button></div>';
     openSheet(h);
     each(sheet.querySelectorAll("[data-refadd]"), function(el){
       el.onclick = function(){
