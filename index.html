@@ -260,6 +260,7 @@
   function stCls(k){ for(var i=0;i<STATUSES.length;i++) if(STATUSES[i][0]===k) return STATUSES[i][2]; return "s-new"; }
   var DEAD = {"refuse-self":1,"refuse-us":1,"hired":1};
 
+  var DEF_SOURCES = ["hh.ru","авито","телеграм","рекомендация","с улицы","другое"];
   var DEF_REJECT = ["не устроила зарплата","далеко ездить","нашёл другую работу","не прошёл медкомиссию","не вышел на связь","не пришёл на собеседование","не устроил график"];
   var DEF_DISMISS = ["по собственному желанию","не прошёл испытательный срок","нарушения дисциплины","переезд","не устроила зарплата","конфликт в коллективе","по здоровью"];
   var DEF_TEMPLATES = [
@@ -270,11 +271,7 @@
     {name:"не дозвонились", text:"здравствуйте, {имя}! звонили вам по поводу вакансии «{вакансия}», не смогли дозвониться. напишите, когда вам удобно поговорить."}
   ];
 
-  var state = load();
-
-  function load(){
-    var s;
-    try{ s = JSON.parse(localStorage.getItem(KEY)); }catch(e){ s = null; }
+  function normalizeState(s){
     if(!s || typeof s!=="object") s = {};
     s.candidates = s.candidates || [];
     s.vacancies  = s.vacancies  || [];
@@ -283,12 +280,61 @@
     s.refs       = s.refs       || {};
     s.refs.reject    = s.refs.reject    || DEF_REJECT.slice();
     s.refs.dismiss   = s.refs.dismiss   || DEF_DISMISS.slice();
+    s.refs.sources   = s.refs.sources   || DEF_SOURCES.slice();
     s.refs.templates = s.refs.templates || DEF_TEMPLATES.map(function(t){ return {name:t.name, text:t.text}; });
     s.refs.docs = s.refs.docs || ["паспорт","снилс","инн","трудовая книжка","флюорография","справка от врача","фото 3x4"];
     s.meta = s.meta || {};
     return s;
   }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ alert("не удалось сохранить — возможно, память браузера переполнена"); } }
+  function load(){
+    var s;
+    try{ s = JSON.parse(localStorage.getItem(KEY)); }catch(e){ s = null; }
+    return normalizeState(s);
+  }
+  var state = load();
+
+  // ---- общая база (синхронизация между устройствами, Cloudflare Worker + KV) ----
+  var HRTRACKER_API = 'https://hrtracker-storage.nikakuznecova24.workers.dev';
+  var HRTRACKER_TOKEN = 'efDeSgOPorKACiFlYcaaDgcqy3VrkAHioqJX_fGlfOK';
+  var STATE_KEY = 'state';
+  var dbRef = false; // true once синхронизация с сервером хоть раз сработала
+  var saveChain = Promise.resolve();
+  var lastSyncedJSON = null;
+
+  function kvGet(key){
+    return fetch(HRTRACKER_API + '/kv/' + encodeURIComponent(key), { headers:{ 'X-Hrtracker-Token': HRTRACKER_TOKEN } })
+      .then(function(res){
+        if(res.status===404) return null;
+        return res.json().then(function(d){ return d.value; });
+      });
+  }
+  function kvPut(key, value){
+    return fetch(HRTRACKER_API + '/kv/' + encodeURIComponent(key), {
+      method:'PUT', headers:{ 'X-Hrtracker-Token': HRTRACKER_TOKEN }, body: value
+    });
+  }
+  function pollRemote(){
+    kvGet(STATE_KEY).then(function(raw){
+      if(raw==null || raw===lastSyncedJSON) return;
+      var parsed; try{ parsed = JSON.parse(raw); }catch(e){ return; }
+      lastSyncedJSON = raw;
+      state = normalizeState(parsed);
+      try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+      dbRef = true;
+      render();
+    }).catch(function(e){ console.error("sync poll failed", e); });
+  }
+  pollRemote();
+  setInterval(pollRemote, 15000);
+
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ alert("не удалось сохранить — возможно, память браузера переполнена"); }
+    var json = JSON.stringify(state);
+    lastSyncedJSON = json;
+    saveChain = saveChain.then(function(){ return kvPut(STATE_KEY, json); })
+      .then(function(){ dbRef = true; })
+      .catch(function(e){ console.error("server save failed", e); });
+  }
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
   function pad(n){ return n<10 ? "0"+n : ""+n; }
@@ -690,12 +736,20 @@
       var w = 26 + Math.round((counts[i]/mx) * 220);
       h += '<div class="step"><div class="bar" style="width:'+w+'px">'+counts[i]+'</div><div class="lab">'+s[1]+'</div></div>';
     });
-    h += '</div></div>';
+    h += '</div>';
+    var totalC = C.length;
+    var everInterview = C.filter(function(c){ return (c.history||[]).some(function(hh){return hh.to==="interview";}); }).length;
+    var everHired = C.filter(function(c){ return c.status==="hired"; }).length;
+    if(totalC){
+      var pctInt = Math.round(everInterview/totalC*100), pctHired = Math.round(everHired/totalC*100);
+      h += '<div class="sub" style="margin-top:6px">из всех кандидатов: до собеса дошли '+pctInt+'%, вышли на работу '+pctHired+'%</div>';
+    }
+    h += '</div>';
 
     h += '<div class="card"><h2>отчёт</h2><div class="sub">готовый текст, чтобы отправить руководителю</div>'+
          '<div class="mini"><button data-rep="week">за неделю</button><button data-rep="month">за месяц</button></div></div>';
 
-    h += '<div class="card"><h2>данные</h2><div class="sub">хранятся в этом браузере — делай копию</div>'+
+    h += '<div class="card"><h2>данные</h2><div class="sub">'+(dbRef ? "общие — видны с любого устройства, где открыт трекер" : "хранятся в этом браузере — делай копию")+'</div>'+
          '<button class="btn soft" id="exp">выгрузить копию (файл)</button>'+
          '<button class="btn soft" id="imp" style="margin-top:8px">загрузить из копии</button>'+
          '<input type="file" id="impFile" accept="application/json,.json" style="display:none">'+
@@ -723,8 +777,8 @@
 
     var txt = "отчёт по найму — " + label + "\n\n";
     txt += "назначено собеседований: " + assigned + "\n";
-    txt += "проведено собеседований: " + conducted + "\n";
-    txt += "вышло на работу: " + hired + "\n";
+    txt += "проведено собеседований: " + conducted + (assigned ? " ("+Math.round(conducted/assigned*100)+"% от назначенных)" : "") + "\n";
+    txt += "вышло на работу: " + hired + (conducted ? " ("+Math.round(hired/conducted*100)+"% от проведённых собесов)" : "") + "\n";
     txt += "уволилось: " + fired + "\n\n";
 
     txt += "воронка сейчас:\n";
@@ -916,7 +970,7 @@
     var c = id ? findCand(id) : null;
     var isNew = !c;
     var ref = c;
-    if(isNew) c = { id:uid(), fio:"", vacancy:"", age:"", phone:"", exp:"", status:"new", meta:{}, note:"", history:[], createdAt:isoToday() };
+    if(isNew) c = { id:uid(), fio:"", vacancy:"", age:"", phone:"", exp:"", source:"", status:"new", meta:{}, note:"", history:[], createdAt:isoToday() };
     var draft = JSON.parse(JSON.stringify(c));
 
     function vacChips(sel){
@@ -986,6 +1040,9 @@
           '<button type="button" id="btnWa">написать в whatsapp</button>'+
           '<button type="button" id="btnTg">в телеграм</button>'+
           '</div></div>';
+      h += '<div class="field"><label>откуда кандидат</label><div class="chips" id="srcChips">'+
+           state.refs.sources.map(function(sc){ return '<button type="button" class="chip'+(draft.source===sc?" on":"")+'" data-src="'+esc(sc)+'">'+esc(sc)+'</button>'; }).join("")+
+           '</div><input data-k="source" value="'+esc(draft.source||"")+'" placeholder="или впиши свой" style="margin-top:8px"></div>';
       h += '<div class="field"><label>опыт</label><div class="seg" id="expSeg">'+
            '<button type="button" data-exp="есть" class="'+(draft.exp==="есть"?"on":"")+'">есть</button>'+
            '<button type="button" data-exp="нет" class="'+(draft.exp==="нет"?"on":"")+'">нет</button></div></div>';
@@ -1082,6 +1139,14 @@
           each(sheet.querySelectorAll("#vacChips [data-vac]"), function(x){ x.classList.toggle("on", x===el); });
         };
       });
+      each(sheet.querySelectorAll("#srcChips [data-src]"), function(el){
+        el.onclick = function(){
+          draft.source = el.getAttribute("data-src");
+          each(sheet.querySelectorAll("#srcChips [data-src]"), function(x){ x.classList.toggle("on", x===el); });
+          var inp = sheet.querySelector('[data-k="source"]');
+          if(inp) inp.value = draft.source;
+        };
+      });
       function msgForContact(){
         readInputs();
         var m = draft.meta||{};
@@ -1132,6 +1197,13 @@
     function doSave(){
       readInputs();
       if(!draft.fio || !draft.fio.trim()){ alert("впиши имя"); return; }
+      if(isNew){
+        var p = normPhone(draft.phone);
+        if(p){
+          var dup = state.candidates.filter(function(x){ return normPhone(x.phone)===p; })[0];
+          if(dup && !confirm("кандидат с таким телефоном уже есть: "+(dup.fio||"без имени")+" ("+stName(dup.status)+"). всё равно завести нового?")) return;
+        }
+      }
       var prevStatus = ref ? ref.status : null;
       var prevRating = (ref && ref.meta) ? ref.meta.rating : null;
       draft.history = draft.history || [];
@@ -1235,6 +1307,7 @@
   // ---- settings ----
   function openSettings(){
     var h = '<h2>настройки</h2>';
+    h += refBlock("источники кандидатов", "sources");
     h += refBlock("причины отказа", "reject");
     h += refBlock("причины увольнения", "dismiss");
     h += '<div class="field"><label>шаблоны сообщений</label>';
@@ -1271,9 +1344,9 @@
     sheet.querySelector("#sImp").onclick = function(){ sheet.querySelector("#sImpFile").click(); };
     sheet.querySelector("#sImpFile").onchange = doImport;
     sheet.querySelector("#sClear").onclick = function(){
-      if(!confirm("удалить все данные из этого браузера? отменить нельзя")) return;
+      if(!confirm(dbRef ? "удалить все данные — общие, у всех, кто открывает трекер? отменить нельзя" : "удалить все данные из этого браузера? отменить нельзя")) return;
       if(!confirm("точно? сделай копию заранее")) return;
-      localStorage.removeItem(KEY); state = load(); closeSheet(); setScreen("day");
+      localStorage.removeItem(KEY); state = load(); save(); closeSheet(); setScreen("day");
     };
   }
   function editTemplate(idx){
@@ -1305,12 +1378,14 @@
 
   // ---- export / import ----
   function doExport(){
+    state.meta.lastBackup = isoToday(); save();
+    var json = JSON.stringify(state,null,2);
+    var name = "найм-копия-"+isoToday()+".json";
     try{
-      state.meta.lastBackup = isoToday(); save();
-      var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+      var blob = new Blob([json], {type:"application/json"});
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      a.href = url; a.download = "найм-копия-"+isoToday()+".json";
+      a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 8000);
       toast("копия сохранена");
@@ -1323,9 +1398,9 @@
       try{
         var s = JSON.parse(r.result);
         if(!s || !s.candidates){ alert("файл не похож на копию"); return; }
-        if(!confirm("заменить текущие данные данными из файла?")) return;
-        localStorage.setItem(KEY, JSON.stringify(s));
-        state = load(); closeSheet(); setScreen("day");
+        if(!confirm(dbRef ? "заменить текущие данные — общие, у всех, кто открывает трекер — данными из файла?" : "заменить текущие данные данными из файла?")) return;
+        state = normalizeState(s);
+        save(); closeSheet(); setScreen("day");
       }catch(err){ alert("не получилось прочитать файл"); }
     };
     r.readAsText(f);
